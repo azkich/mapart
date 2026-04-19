@@ -11,6 +11,7 @@
   margin-right: 3px;
   margin-left: 3px;
   flex-shrink: 0;
+  outline: none;
 }
 
 .colourSetBlocks {
@@ -18,3 +19,36 @@
   flex-direction: row;
   flex-wrap: wrap;
 }
+
+.colourSetToneWrapper,
+.blockWithIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.selectionLine {
+  width: 70%;
+  height: 2px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background-color: rgba(202, 151, 29, 0.6);
+  box-shadow: 0 0 4px rgba(202, 151, 29, 0.7);
+  pointer-events: none;
+}
+
+.blockWithIndicator .blockImage {
+  display: block;
+  margin-bottom: 1px;
+}
+
+.blockWithIndicator .selectionLine {
+  margin-top: 1px;
+  background-color: #ffd700;
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.9);
+}
+
+
+
+

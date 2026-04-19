@@ -1,0 +1,65 @@
+.materialsDiv {
+  background-color: #201c14;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: var(--radius);
+  padding: 15px;
+  color: #e0debc;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.materialsDiv.dropZone.dragOver {
+  border: 2px dashed #d4af37 !important;
+  background-color: rgba(212, 175, 55, 0.1) !important;
+}
+
+.materialsDiv h2 {
+  margin-bottom: 15px;
+  text-align: center;
+  color: #e0debc;
+  font-size: 1.5em;
+}
+
+.materialsDiv button {
+  background-color: #688e6b;
+  color: #e0debc;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin: 10px 0;
+  transition: background-color 0.3s ease;
+}
+
+.materialsDiv button:hover {
+  background-color: #7a9f7c;
+}
+
+.materialsDiv input[type="checkbox"] {
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+#materialtable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+#materialtable th {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+  color: #e0debc;
+}
+
+#materialtable th:first-child {
+  width: 60%;
+}
+
+#materialtable th:last-child {
+  width: 40%;
+  text-align: right;
+}
+
+

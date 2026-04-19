@@ -10,8 +10,6 @@
     "FAQ": "KKK",
     "PLEASE-READ-1": "Palun lugege ",
     "PLEASE-READ-2": " enne küsimuste küsimist!",
-    "HAVE-YOU-READ": "Kas sa oled lugenud KKK?",
-    "HELP-IN-ENGLISH": "Märkus: Abi pakutakse vaid inglise ja eesti keeles",
     "VIDEO-TUTORIAL": "Videoõpetus"
   },
   "DESCRIPTION": {
@@ -20,17 +18,15 @@
     "3": "Inspireeritud ",
     "4": "Redstonehelperi kaardikunsti programmi",
     "5": " põhjal, eesmärgiga lisada paljunõutud lisavõimalusi ning eemaldada vajadus programmi alla laadida",
-    "6": "Võite minuga ühedust võtta Discordi ",
-    "7": " või Redditi ",
-    "8": " kaudu, lisavõimaluste taotlused ning putukad lähevad ",
-    "9": null,
-    "10": null
+    "6": null,
+    "7": null
   },
   "BLOCK-SELECTION": {
     "TITLE": "Plokkide valik",
     "PRESETS": {
       "TITLE": "Eelseadistused",
       "DELETE": "Kustuta",
+      "DELETE-CONFIRM": null,
       "DELETE-ERROR-DEFAULT": "See on tehaseseadistus mida ei anna muuta/kustutada.",
       "SAVE": "Salvesta",
       "SAVE-PROMPT-ENTER-NAME": "Vali nimi oma eelseadistustele:",
@@ -48,7 +44,7 @@
       "EVERYTHING": "Kõik",
       "CARPETS": "Vaibad",
       "GREYSCALE": "Mustvalge",
-      "DELETE-CONFIRM": null
+      "PISTON-CLEARABLE": null
     },
     "UNSUPPORTED-PAST": null,
     "ADD-CUSTOM": {
@@ -130,10 +126,19 @@
     },
     "BETTER-COLOUR": "Paremad värvid",
     "BETTER-COLOUR-TT": "Annab parema värvitäpsuse",
+    "E94": "E94",
+    "E94-TT": "Täiustatud värvivahe valem suurema tajutäpsusega",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS": "Kaalutud eukleidiline (Heledus)",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS-TT": "Kaalutud eukleidiline kaugus YCbCr ruumis heleduse rõhuga",
+    "CIE94": "CIE94",
+    "CIE94-TT": "Standardne CIE94 värvivahe valem",
     "DITHERING": {
       "TITLE": "Värelemine",
       "TITLE-TT": "Lisab näiliselt suvalisi piksleid, tekitades illusiooni rohkematest värvidest",
-      "NONE": "Puudub"
+      "NONE": "Puudub",
+      "PROPAGATION-RED": null,
+      "PROPAGATION-GREEN": null,
+      "PROPAGATION-BLUE": null
     },
     "PREPROCESSING": {
       "TITLE": "Pilditöötlus",
@@ -178,7 +183,8 @@
     "SHOW-PER-SPLIT": "Näita maksimaalseid materjale ühe lõhestuse kohta",
     "SHOW-PER-SPLIT-TT": "Materjalide taaskasutamiseks lukustatud kaartidega",
     "REFRESH-MATERIALS": "VÄRSKENDA MATERJALE",
-    "REFRESH-MATERIALS-TT": "Värskenda materjalide listi"
+    "REFRESH-MATERIALS-TT": "Värskenda materjalide listi",
+    "COPY-CLIPBOARD": null
   },
   "VIEW-ONLINE": {
     "TITLE": null,
@@ -188,17 +194,7 @@
     "TO-EXIT": null,
     "SIZE": "Suurus"
   },
-  "DONATE": {
-    "TITLE": "PÄÄSTA MIND JÄRJEKORRAST",
-    "TITLE-TT": "Vaata toetajaid ja anneta"
-  },
   "LITEMATICA-WARNING": null,
   "EDGE-WARNING": "Märkus: Microsoft Edge kasutamine ei ole toetatud.\\nPalun kasutage Chrome (soovitatud) või Tulirebane MapartCrafti jaoks",
-  "NONE": "Puudub",
-  "UNUSED": {
-    "SECOND": "sekund",
-    "SECONDS": "sekundit",
-    "REMAINING": "jäänud",
-    "SETTINGS-3D-OPTIMIZED": "Sees (optimiseeritud)"
-  }
+  "NONE": "Puudub"
 }

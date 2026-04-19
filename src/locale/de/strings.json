@@ -10,8 +10,6 @@
     "FAQ": "FAQ",
     "PLEASE-READ-1": "Bitte lies das ",
     "PLEASE-READ-2": " bevor Du mich kontaktierst!",
-    "HAVE-YOU-READ": "Hast Du das FAQ gelesen?",
-    "HELP-IN-ENGLISH": "Hinweis: Hilfe kann ausschließlich auf Englisch bereitgestellt werden",
     "VIDEO-TUTORIAL": "Erklärvideo"
   },
   "DESCRIPTION": {
@@ -20,17 +18,15 @@
     "3": "Inspiriert durch ",
     "4": "Redstonehelpers Mapart-Programm",
     "5": ", mit dem Ziel verschiedenste gewünschte Funktionen zu implementieren und das Programm online verfügbar zu machen.",
-    "6": "Bei Rückfragen kannst Du mich auf Discord ",
-    "7": " oder Reddit ",
-    "8": " erreichen. Bug-Reports und Featurewünsche können auf GitHub eingereicht werden: ",
-    "9": null,
-    "10": null
+    "6": null,
+    "7": null
   },
   "BLOCK-SELECTION": {
     "TITLE": "Blockauswahl",
     "PRESETS": {
       "TITLE": "Vorlagen",
       "DELETE": "Entfernen",
+      "DELETE-CONFIRM": null,
       "DELETE-ERROR-DEFAULT": null,
       "SAVE": "Speichern",
       "SAVE-PROMPT-ENTER-NAME": "Gib einen Namen für Deine Vorlage ein:",
@@ -48,7 +44,7 @@
       "EVERYTHING": "Alles",
       "CARPETS": "Teppiche",
       "GREYSCALE": null,
-      "DELETE-CONFIRM": null
+      "PISTON-CLEARABLE": null
     },
     "UNSUPPORTED-PAST": null,
     "ADD-CUSTOM": {
@@ -83,6 +79,8 @@
     "VERSION": "Version",
     "VERSION-TT": "Wähle die nächstgelegene Version zu der aus, auf welcher Du spielst.",
     "MAP-SIZE": "Maße",
+    "AUTO-ZOOM": "Statische Vorschau",
+    "AUTO-ZOOM-TT": "Reduziert die Vorschau-Größe, wenn das Mapart zu groß ist und Seitenelemente verschiebt",
     "CROP": {
       "TITLE": "Zuschneiden",
       "TITLE-TT": "Schneidet das Bild zurecht, statt es zu verzerren",
@@ -130,10 +128,21 @@
     },
     "BETTER-COLOUR": "Verbesserte Farben",
     "BETTER-COLOUR-TT": "Aktiviert eine optimierte Farbgenauigkeit",
+    "WEIGHTED-EUCLIDEAN": "Gewichtetes euklidisches",
+    "WEIGHTED-EUCLIDEAN-TT": "Euklidische Distanz im L*a*b*-Raum mit wahrnehmungsbezogenen Gewichten",
+    "E94": "E94",
+    "E94-TT": "Verbesserte Farbdifferenzformel mit erhöhter wahrnehmungsbezogener Genauigkeit",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS": "Gewichtetes euklidisches (Helligkeit)",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS-TT": "Gewichtete euklidische Distanz im YCbCr-Raum mit Betonung der Helligkeit",
+    "CIE94": "CIE94",
+    "CIE94-TT": "Standard CIE94-Farbdifferenzformel",
     "DITHERING": {
       "TITLE": "Dithering",
       "TITLE-TT": "Schafft die Illusion von mehr Farben durch das Hinzufügen scheinbar zufälliger Pixel",
-      "NONE": "Aus"
+      "NONE": "Aus",
+      "PROPAGATION-RED": null,
+      "PROPAGATION-GREEN": null,
+      "PROPAGATION-BLUE": null
     },
     "PREPROCESSING": {
       "TITLE": null,
@@ -178,7 +187,8 @@
     "SHOW-PER-SPLIT": "Nur maximale Materialienveränderung zeigen:",
     "SHOW-PER-SPLIT-TT": "Für Materialwiderverwertung bei feststellbaren Karten",
     "REFRESH-MATERIALS": "MATERIALIEN AKTUALISIEREN",
-    "REFRESH-MATERIALS-TT": "Materialliste aktualisieren"
+    "REFRESH-MATERIALS-TT": "Materialliste aktualisieren",
+    "COPY-CLIPBOARD": null
   },
   "VIEW-ONLINE": {
     "TITLE": null,
@@ -188,17 +198,7 @@
     "TO-EXIT": null,
     "SIZE": "Maße"
   },
-  "DONATE": {
-    "TITLE": "KLEINE SPENDE BITTE",
-    "TITLE-TT": "Spendenlink und Liste aller Unterstützer"
-  },
   "LITEMATICA-WARNING": null,
   "EDGE-WARNING": "Hinweis: Microsoft Edge wird nicht unterstützt.\\nBitte verwende Google Chrome (bevorzugt) oder Mozilla Firefox für MapartCraft",
-  "NONE": "None",
-  "UNUSED": {
-    "SECOND": "Sekunde",
-    "SECONDS": "Sekunden",
-    "REMAINING": "verbleibend",
-    "SETTINGS-3D-OPTIMIZED": "An (optimiert)"
-  }
+  "NONE": "None"
 }

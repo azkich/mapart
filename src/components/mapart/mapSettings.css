@@ -1,6 +1,410 @@
 .settingsGroup {
   margin-block-start: 0.2em;
   margin-block-end: 0.2em;
-  padding: 0.2em;
-  outline: 0.1em solid white;
+  padding: 0.8rem;
+  border: 1px solid var(--border-color, rgba(212, 175, 55, 0.35));
+  border-radius: var(--radius, 12px);
+  background: rgba(212, 175, 55, 0.04);
+  transition: var(--transition, all 0.2s ease);
+}
+
+.settingsGroup:hover {
+  border-color: var(--border-hover, rgba(212, 175, 55, 0.45));
+  background: rgba(212, 175, 55, 0.06);
+}
+
+/* Custom styles for map size input fields - now handled in bufferedNumberInput.css */
+
+/* RGB Slider and Input Layout */
+.sliderWithInput {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.3rem !important;
+  padding: 0.4rem 0.6rem !important;
+}
+
+/* RGB Slider styling */
+.rgbSlider {
+  flex: 1 !important;
+  min-width: 120px !important;
+  height: 24px !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background: linear-gradient(to right, 
+    var(--bg-darker, #0a0a0a) 0%, 
+    var(--border-color, rgba(212, 175, 55, 0.35)) 50%, 
+    var(--accent, #D4AF37) 100%) !important;
+  border-radius: 12px !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.rgbSlider:hover {
+  background: linear-gradient(to right, 
+    var(--bg-darker, #0a0a0a) 0%, 
+    rgba(212, 175, 55, 0.45) 50%, 
+    var(--accent, #D4AF37) 100%) !important;
+}
+
+/* Slider thumb styling for webkit browsers */
+.rgbSlider::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--accent, #D4AF37) !important;
+  border: 2px solid var(--beige-text, #F5F5DC) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.rgbSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Slider thumb styling for Firefox */
+.rgbSlider::-moz-range-thumb {
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--accent, #D4AF37) !important;
+  border: 2px solid var(--beige-text, #F5F5DC) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* RGB Input field styling */
+.rgbInput {
+  width: 60px !important;
+  height: 33px !important;
+  min-width: 60px !important;
+  max-width: 80px !important;
+  
+  /* Text styling with required color */
+  color: #d6d5c0 !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  padding: 0 8px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  
+  /* Appearance */
+  border-radius: 8px !important;
+  background-color: var(--bg-dark, #121212) !important;
+  border: 1px solid var(--border-color, rgba(212, 175, 55, 0.35)) !important;
+  box-sizing: border-box !important;
+  
+  /* Smooth transition */
+  transition: all 0.2s ease !important;
+}
+
+.rgbInput:focus {
+  border-color: var(--accent, #D4AF37) !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15) !important;
+  outline: none !important;
+}
+
+.rgbInput:hover {
+  background-color: rgba(212, 175, 55, 0.06) !important;
+  border-color: var(--border-hover, rgba(212, 175, 55, 0.45)) !important;
+}
+
+/* Remove number input spinners for RGB inputs */
+.rgbInput::-webkit-outer-spin-button,
+.rgbInput::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+.rgbInput[type=number] {
+  -moz-appearance: textfield !important;
+}
+
+/* Compact setting rows for better layout */
+.setting-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.8rem !important;
+  margin-bottom: 0.5rem !important;
+  padding: 0.3rem 0 !important;
+}
+
+.setting-row:last-child {
+  margin-bottom: 0 !important;
+}
+
+.setting-row b {
+  min-width: 120px !important;
+  flex-shrink: 0 !important;
+}
+
+.setting-row select {
+  width: 200px !important;
+  flex-shrink: 0 !important;
+}
+
+.setting-row input[type="range"] {
+  flex: 1 !important;
+  min-width: 150px !important;
+  max-width: 300px !important;
+  height: 24px !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background: linear-gradient(to right, 
+    var(--bg-darker, #0a0a0a) 0%, 
+    var(--beige-text, #F5F5DC) 100%) !important;
+  border-radius: 12px !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.setting-row input[type="range"]:hover {
+  background: linear-gradient(to right, 
+    var(--bg-darker, #0a0a0a) 0%, 
+    rgba(245, 245, 220, 0.8) 100%) !important;
+}
+
+/* Slider thumb styling for webkit browsers */
+.setting-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--accent, #D4AF37) !important;
+  border: 2px solid var(--beige-text, #F5F5DC) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.setting-row input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Slider thumb styling for Firefox */
+.setting-row input[type="range"]::-moz-range-thumb {
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--accent, #D4AF37) !important;
+  border: 2px solid var(--beige-text, #F5F5DC) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Global checkbox styling */
+input[type="checkbox"] {
+  margin: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  background-color: #281c14 !important;
+  border: 2px solid var(--border-color, rgba(212, 175, 55, 0.35)) !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--border-hover, rgba(212, 175, 55, 0.45)) !important;
+  background-color: rgba(40, 28, 20, 0.8) !important;
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--accent, #D4AF37) !important;
+  border-color: var(--accent, #D4AF37) !important;
+}
+
+input[type="checkbox"]:checked::after {
+  content: "✓" !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: var(--beige-text, #F5F5DC) !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  line-height: 1 !important;
+}
+
+/* Styling for number inputs in setting rows */
+.setting-row input[type="number"] {
+  color: #d5d5bf !important;
+  background-color: var(--bg-dark, #121212) !important;
+  border: 1px solid var(--border-color, rgba(212, 175, 55, 0.35)) !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+  min-width: 3em !important;
+  width: auto !important;
+  flex-shrink: 0 !important;
+}
+
+.setting-row input[type="number"]:focus {
+  border-color: var(--accent, #D4AF37) !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15) !important;
+  outline: none !important;
+}
+
+.setting-row input[type="number"]:hover {
+  background-color: rgba(212, 175, 55, 0.06) !important;
+  border-color: var(--border-hover, rgba(212, 175, 55, 0.45)) !important;
+}
+
+/* Remove number input spinners for setting rows */
+.setting-row input[type="number"]::-webkit-outer-spin-button,
+.setting-row input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+.setting-row input[type="number"][type=number] {
+  -moz-appearance: textfield !important;
+}
+
+/* Styling for preprocessing number inputs */
+.settingsGroup input[type="number"] {
+  color: #e0debc !important;
+  background-color: var(--bg-dark, #121212) !important;
+  border: 1px solid var(--border-color, rgba(212, 175, 55, 0.35)) !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+  min-width: 3em !important;
+  width: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Reduce spacing between sliders and input fields in preprocessing */
+.settingsGroup table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+.settingsGroup th {
+  padding: 8px 12px 8px 0 !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.settingsGroup td {
+  padding: 8px 4px !important;
+  vertical-align: middle !important;
+}
+
+/* Make sliders take more space and inputs take less */
+.settingsGroup td:nth-child(2) {
+  width: 100% !important;
+  padding-right: 8px !important;
+}
+
+.settingsGroup td:nth-child(3) {
+  width: auto !important;
+  padding-left: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* Styling for preprocessing sliders */
+.settingsGroup input[type="range"] {
+  width: 100% !important;
+  height: 24px !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background: linear-gradient(to right, 
+    var(--bg-darker, #0a0a0a) 0%, 
+    var(--beige-text, #F5F5DC) 100%) !important;
+  border-radius: 12px !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+}
+
+.settingsGroup input[type="range"]:hover {
+  background: linear-gradient(to right, 
+    var(--bg-darker, #0a0a0a) 0%, 
+    rgba(245, 245, 220, 0.8) 100%) !important;
+}
+
+/* Slider thumb styling for webkit browsers */
+.settingsGroup input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--accent, #D4AF37) !important;
+  border: 2px solid var(--beige-text, #F5F5DC) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.settingsGroup input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Slider thumb styling for Firefox */
+.settingsGroup input[type="range"]::-moz-range-thumb {
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--accent, #D4AF37) !important;
+  border: 2px solid var(--beige-text, #F5F5DC) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.settingsGroup input[type="number"]:focus {
+  border-color: var(--accent, #D4AF37) !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15) !important;
+  outline: none !important;
+}
+
+.settingsGroup input[type="number"]:hover {
+  background-color: rgba(212, 175, 55, 0.06) !important;
+  border-color: var(--border-hover, rgba(212, 175, 55, 0.45)) !important;
+}
+
+/* Remove number input spinners for preprocessing inputs */
+.settingsGroup input[type="number"]::-webkit-outer-spin-button,
+.settingsGroup input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+.settingsGroup input[type="number"][type=number] {
+  -moz-appearance: textfield !important;
+}
+
+/* Checkbox spacing for elements outside setting-row */
+input[type="checkbox"] {
+  margin-left: 0.8rem !important;
+  vertical-align: middle !important;
 }

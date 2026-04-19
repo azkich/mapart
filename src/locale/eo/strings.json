@@ -10,8 +10,6 @@
     "FAQ": "OD",
     "PLEASE-READ-1": "Bonvolu vidi la ",
     "PLEASE-READ-2": "-n antaŭ ol demandi iun ie!",
-    "HAVE-YOU-READ": "Ĉu vi legis la OD-n?",
-    "HELP-IN-ENGLISH": "Atentu: Helpo estos provizita nur en la Angla",
     "VIDEO-TUTORIAL": "Videa instrukcio"
   },
   "DESCRIPTION": {
@@ -20,17 +18,15 @@
     "3": "Inspirita de ",
     "4": "Redstonehelper's map art programo",
     "5": ", kun la celo por aldoni ofte petatajn apartaĵojn kaj forigi la neceson por enŝuti programon",
-    "6": "Vi povas libere mesaĝi al mi per Discord ",
-    "7": " aŭ Reddit ",
-    "8": ", apartaĵajn petojn kaj cimraportojn sendu al ",
-    "9": null,
-    "10": null
+    "6": null,
+    "7": null
   },
   "BLOCK-SELECTION": {
     "TITLE": "Blokelektejo",
     "PRESETS": {
       "TITLE": "Ŝablonoj",
       "DELETE": "Forigi",
+      "DELETE-CONFIRM": null,
       "DELETE-ERROR-DEFAULT": null,
       "SAVE": "Konservi",
       "SAVE-PROMPT-ENTER-NAME": "Entajpu la nomon por la ŝablono:",
@@ -48,7 +44,7 @@
       "EVERYTHING": "Ĉio",
       "CARPETS": "Tapiŝoj",
       "GREYSCALE": null,
-      "DELETE-CONFIRM": null
+      "PISTON-CLEARABLE": null
     },
     "UNSUPPORTED-PAST": null,
     "ADD-CUSTOM": {
@@ -130,10 +126,19 @@
     },
     "BETTER-COLOUR": "Pli bona koloro",
     "BETTER-COLOUR-TT": "Tio igas pli bonan kolorakuratecon",
+    "E94": "E94",
+    "E94-TT": "Plibonigita kolorodiferenco formulo kun pli alta percepta precizeco",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS": "Pezita eŭklida (Brileco)",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS-TT": "Pezita eŭklida distanco en YCbCr spaco kun emfazo sur brileco",
+    "CIE94": "CIE94",
+    "CIE94-TT": "Norma CIE94 kolorodiferenco formulo",
     "DITHERING": {
       "TITLE": "Konfuzado",
       "TITLE-TT": "Tio aldonas ŝajne hazardajn rastrumerojn por iluzio de pli multe da koloroj",
-      "NONE": "Nula"
+      "NONE": "Nula",
+      "PROPAGATION-RED": null,
+      "PROPAGATION-GREEN": null,
+      "PROPAGATION-BLUE": null
     },
     "PREPROCESSING": {
       "TITLE": null,
@@ -178,7 +183,8 @@
     "SHOW-PER-SPLIT": null,
     "SHOW-PER-SPLIT-TT": null,
     "REFRESH-MATERIALS": "ĜISDATIGI MATERIALOJN",
-    "REFRESH-MATERIALS-TT": "Ĝisdatigi materialan liston"
+    "REFRESH-MATERIALS-TT": "Ĝisdatigi materialan liston",
+    "COPY-CLIPBOARD": null
   },
   "VIEW-ONLINE": {
     "TITLE": null,
@@ -188,17 +194,7 @@
     "TO-EXIT": null,
     "SIZE": "Amplekso"
   },
-  "DONATE": {
-    "TITLE": "HELPU MIN PASI LA VICON",
-    "TITLE-TT": "Montri subtenintojn kaj mondonaci"
-  },
   "LITEMATICA-WARNING": "Atentu: Se vi uzas Litematica-n 1.15.2, bonvolu uzi la 1.15 version\\nLitematica ŝajnas iel havi cimon se vi elektas alian version",
   "EDGE-WARNING": "Atentu: uzado de Microsoft Edge estas malsubtenata.\\nBonvolu uzi Chrome-n (prefere) aŭ Firefox-n por MapartCraft",
-  "NONE": "Nula",
-  "UNUSED": {
-    "SECOND": "sekundo",
-    "SECONDS": "sekundoj",
-    "REMAINING": "restas",
-    "SETTINGS-3D-OPTIMIZED": "Ŝaltita (optimumigita)"
-  }
+  "NONE": "Nula"
 }

@@ -179,10 +179,21 @@ class BlockSelectionAddCustom extends Component {
               <div
                 key={block.blockName}
                 style={{
-                  outline: "0.1em solid white",
-                  padding: "0.2em",
+                  border: "1px solid rgba(212, 175, 55, 0.35)",
+                  borderRadius: "12px",
+                  background: "rgba(212, 175, 55, 0.04)",
+                  padding: "0.8rem",
                   marginBlockStart: "0.2em",
                   marginBlockEnd: "0.2em",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.borderColor = "rgba(212, 175, 55, 0.45)";
+                  e.target.style.background = "rgba(212, 175, 55, 0.06)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.borderColor = "rgba(212, 175, 55, 0.35)";
+                  e.target.style.background = "rgba(212, 175, 55, 0.04)";
                 }}
               >
                 <table>

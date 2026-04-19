@@ -1,0 +1,78 @@
+/* BufferedNumberInput styling */
+input[type="number"] {
+  color: #e0debc !important;
+  background-color: var(--bg-dark, #121212) !important;
+  border: 1px solid var(--border-color, rgba(212, 175, 55, 0.35)) !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+  min-width: 3em !important;
+  flex-shrink: 0 !important;
+}
+
+/* Specific styling for map size inputs */
+input[type="number"].mapSizeInput {
+  min-width: 66px !important;
+  max-width: 66px !important;
+  width: 66px !important;
+  height: 33px !important;
+  padding: 0 6px !important;
+  border-radius: 12px !important;
+  color: #d6d5c0 !important;
+  background-color: var(--bg-dark, #121212) !important;
+  border: 1px solid var(--border-color, rgba(212, 175, 55, 0.35)) !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+}
+
+
+
+input[type="number"]:focus {
+  border-color: var(--accent, #D4AF37) !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15) !important;
+  outline: none !important;
+}
+
+input[type="number"]:hover {
+  background-color: rgba(212, 175, 55, 0.06) !important;
+  border-color: var(--border-hover, rgba(212, 175, 55, 0.45)) !important;
+}
+
+/* Focus and hover states for map size inputs */
+input[type="number"].mapSizeInput:focus {
+  border-color: var(--accent, #D4AF37) !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15) !important;
+  outline: none !important;
+}
+
+input[type="number"].mapSizeInput:hover {
+  background-color: rgba(212, 175, 55, 0.06) !important;
+  border-color: var(--border-hover, rgba(212, 175, 55, 0.45)) !important;
+}
+
+/* Remove number input spinners for all number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+input[type="number"][type=number] {
+  -moz-appearance: textfield !important;
+}
+
+/* Remove spinners for map size inputs specifically */
+input[type="number"].mapSizeInput::-webkit-outer-spin-button,
+input[type="number"].mapSizeInput::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+input[type="number"].mapSizeInput[type=number] {
+  -moz-appearance: textfield !important;
+}

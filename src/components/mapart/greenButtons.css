@@ -1,12 +1,23 @@
+/* Green Button styling matching index.html design */
 .greenButton {
   display: block;
-  font-family: "kenpixel_mini_square";
-  color: #333333;
-  cursor: pointer;
   position: relative;
   width: 300px;
-  margin-top: 0.1em;
-  margin-bottom: 0.1em;
+  margin: 0.2rem auto;
+  cursor: pointer;
+  background: rgba(212, 175, 55, 0.2) !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: var(--transition) !important;
+}
+
+.greenButton:hover {
+  background: rgba(212, 175, 55, 0.3) !important;
+  border-color: rgba(212, 175, 55, 0.6) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-2px) !important;
 }
 
 .greenButton_text {
@@ -15,9 +26,15 @@
   left: 0;
   width: 100%;
   text-align: center;
-
   line-height: 29px;
   z-index: 10;
+  color: var(--accent) !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2) !important;
+  font-weight: 600 !important;
+  letter-spacing: .5px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .greenButton_text_dummy {
@@ -26,9 +43,11 @@
   width: 100%;
   text-align: center;
   display: block;
-
   line-height: 29px;
   z-index: 10;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .greenButton_large_text {
@@ -37,10 +56,16 @@
   left: 0;
   width: 100%;
   text-align: center;
-
   line-height: 50px;
   z-index: 10;
-  font-size: 26px ;
+  font-size: 26px;
+  color: var(--accent) !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2) !important;
+  font-weight: 600 !important;
+  letter-spacing: .5px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .greenButton_large_text_dummy {
@@ -49,16 +74,31 @@
   width: 100%;
   text-align: center;
   display: block;
-
   line-height: 50px;
   z-index: 10;
-  font-size: 26px ;
+  font-size: 26px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .greenButton_progressDiv {
   position: absolute;
   top: 0;
   left: 0;
-  background-color: #688e6b;
+  background: linear-gradient(90deg, var(--accent) 0%, rgba(212, 175, 55, 0.7) 100%);
   height: 100%;
+  border-radius: calc(var(--radius) - 1px);
+  transition: width 0.3s ease;
+  display: none !important;
+}
+
+/* Progress state styling */
+.greenButton[class*="progress-"] {
+  background: rgba(212, 175, 55, 0.25) !important;
+  border-color: var(--accent) !important;
+}
+
+.greenButton[class*="progress-"] .greenButton_progressDiv {
+  display: block !important;
 }

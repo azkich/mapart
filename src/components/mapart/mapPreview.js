@@ -1,9 +1,11 @@
 import React, { Component, createRef } from "react";
 
 import Tooltip from "../tooltip";
-import MapCanvasWorker from "./workers/mapCanvas.jsworker"; // FINALLY got this to work; .js gets imported as code, anything else as URL
+import WorkerBuilder from './workers/worker-builder';
+import MapCanvasWorker from "./workers/mapCanvas";
 
 import BackgroundColourModes from "./json/backgroundColourModes.json";
+import ColourMethods from "./json/colourMethods.json";
 import CropModes from "./json/cropModes.json";
 import DitherMethods from "./json/ditherMethods.json";
 import MapModes from "./json/mapModes.json";
@@ -19,21 +21,26 @@ class MapPreview extends Component {
   state = {
     mapPreviewSizeScale: 2,
     workerProgress: 0,
+    isDragOver: false,
+    dragCounter: 0,
   };
 
-  mapCanvasWorker = new Worker(MapCanvasWorker);
+  mapCanvasWorker = new WorkerBuilder(MapCanvasWorker);
 
   constructor(props) {
     super(props);
     this.canvasRef_source = createRef(); // hidden source canvas that at all times contains the uploaded image
     this.canvasRef_display = createRef(); // display canvas that displays to the user, may be pixels, may be image
     this.fileInputRef = createRef();
+    this.dropZoneRef = createRef();
+    this.isUpdatingScale = false;
   }
 
   shouldCanvasUpdate_source(prevProps, newProps, prevState, newState) {
     const propChanges = [
       prevProps.coloursJSON === newProps.coloursJSON,
       prevProps.selectedBlocks === newProps.selectedBlocks,
+      prevProps.disabledTones === newProps.disabledTones,
       prevProps.optionValue_mapSize_x === newProps.optionValue_mapSize_x,
       prevProps.optionValue_mapSize_y === newProps.optionValue_mapSize_y,
       prevProps.optionValue_cropImage === newProps.optionValue_cropImage,
@@ -63,6 +70,7 @@ class MapPreview extends Component {
     const propChanges = [
       prevProps.coloursJSON === newProps.coloursJSON,
       prevProps.selectedBlocks === newProps.selectedBlocks,
+      prevProps.disabledTones === newProps.disabledTones,
       prevProps.optionValue_modeNBTOrMapdat === newProps.optionValue_modeNBTOrMapdat,
       prevProps.optionValue_mapSize_x === newProps.optionValue_mapSize_x,
       prevProps.optionValue_mapSize_y === newProps.optionValue_mapSize_y,
@@ -76,6 +84,9 @@ class MapPreview extends Component {
       prevProps.optionValue_transparencyTolerance === newProps.optionValue_transparencyTolerance,
       prevProps.optionValue_betterColour === newProps.optionValue_betterColour,
       prevProps.optionValue_dithering === newProps.optionValue_dithering,
+      prevProps.optionValue_dithering_propagation_red === newProps.optionValue_dithering_propagation_red,
+      prevProps.optionValue_dithering_propagation_green === newProps.optionValue_dithering_propagation_green,
+      prevProps.optionValue_dithering_propagation_blue === newProps.optionValue_dithering_propagation_blue,
       prevProps.optionValue_preprocessingEnabled === newProps.optionValue_preprocessingEnabled,
       prevProps.preProcessingValue_brightness === newProps.preProcessingValue_brightness,
       prevProps.preProcessingValue_contrast === newProps.preProcessingValue_contrast,
@@ -94,6 +105,27 @@ class MapPreview extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    // With static preview, recompute scale when map dimensions change
+    if (
+      !this.isUpdatingScale && this.props.optionValue_autoZoom && (
+        prevProps.optionValue_mapSize_x !== this.props.optionValue_mapSize_x ||
+        prevProps.optionValue_mapSize_y !== this.props.optionValue_mapSize_y
+      )
+    ) {
+      try {
+        const optimalScale = this.calculateOptimalScale();
+        if (optimalScale !== null) {
+          this.isUpdatingScale = true;
+          this.setState({ mapPreviewSizeScale: optimalScale }, () => {
+            this.isUpdatingScale = false;
+          });
+        }
+      } catch (error) {
+        console.warn('Error in componentDidUpdate auto-zoom:', error);
+        this.isUpdatingScale = false;
+      }
+    }
+
     if (this.shouldCanvasUpdate_source(prevProps, this.props, prevState, this.state)) {
       this.updateCanvas_source(); // draw uploaded image on source canvas
     }
@@ -103,7 +135,7 @@ class MapPreview extends Component {
   }
 
   closestSmoothColourTo(colourHex) {
-    const { coloursJSON, selectedBlocks, optionValue_staircasing } = this.props;
+    const { coloursJSON, selectedBlocks, disabledTones, optionValue_staircasing } = this.props;
     const rgbGroups_input = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(colourHex);
     const colourRGB_input = [parseInt(rgbGroups_input[1], 16), parseInt(rgbGroups_input[2], 16), parseInt(rgbGroups_input[3], 16)];
     let smallestDistance = 9999999;
@@ -112,35 +144,51 @@ class MapPreview extends Component {
       if (selectedBlocks[colourSetId] === "-1") {
         continue;
       }
-      let coloursRGB_colourSet;
+      let coloursRGB_colourSet = [];
       switch (optionValue_staircasing) {
         case MapModes.SCHEMATIC_NBT.staircaseModes.OFF.uniqueId:
         case MapModes.SCHEMATIC_NBT.staircaseModes.CLASSIC.uniqueId:
         case MapModes.SCHEMATIC_NBT.staircaseModes.VALLEY.uniqueId:
         case MapModes.MAPDAT.staircaseModes.OFF.uniqueId: {
-          coloursRGB_colourSet = [colourSet.tonesRGB.normal];
+          if (!disabledTones[colourSetId].has("normal"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.normal);
           break;
         }
         case MapModes.SCHEMATIC_NBT.staircaseModes.FULL_DARK.uniqueId:
         case MapModes.MAPDAT.staircaseModes.FULL_DARK.uniqueId: {
-          coloursRGB_colourSet = [colourSet.tonesRGB.dark];
+          if (!disabledTones[colourSetId].has("dark"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.dark);
           break;
         }
         case MapModes.SCHEMATIC_NBT.staircaseModes.FULL_LIGHT.uniqueId:
         case MapModes.MAPDAT.staircaseModes.FULL_LIGHT.uniqueId: {
-          coloursRGB_colourSet = [colourSet.tonesRGB.light];
+          if (!disabledTones[colourSetId].has("light"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.light);
           break;
         }
         case MapModes.MAPDAT.staircaseModes.FULL_UNOBTAINABLE.uniqueId: {
-          coloursRGB_colourSet = [colourSet.tonesRGB.unobtainable];
+          if (!disabledTones[colourSetId].has("unobtainable"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.unobtainable);
           break;
         }
         case MapModes.MAPDAT.staircaseModes.ON.uniqueId: {
-          coloursRGB_colourSet = [colourSet.tonesRGB.dark, colourSet.tonesRGB.normal, colourSet.tonesRGB.light];
+          if (!disabledTones[colourSetId].has("dark"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.dark);
+          if (!disabledTones[colourSetId].has("normal"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.normal);
+          if (!disabledTones[colourSetId].has("light"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.light);
           break;
         }
         case MapModes.MAPDAT.staircaseModes.ON_UNOBTAINABLE.uniqueId: {
-          coloursRGB_colourSet = [colourSet.tonesRGB.dark, colourSet.tonesRGB.normal, colourSet.tonesRGB.light, colourSet.tonesRGB.unobtainable];
+          if (!disabledTones[colourSetId].has("dark"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.dark);
+          if (!disabledTones[colourSetId].has("normal"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.normal);
+          if (!disabledTones[colourSetId].has("light"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.light);
+          if (!disabledTones[colourSetId].has("unobtainable"))
+            coloursRGB_colourSet.push(colourSet.tonesRGB.unobtainable);
           break;
         }
         default: {
@@ -184,7 +232,7 @@ class MapPreview extends Component {
       optionValue_cropImage_percent_y,
     } = this.props;
     const { canvasRef_source } = this;
-    const ctx_source = canvasRef_source.current.getContext("2d");
+    const ctx_source = canvasRef_source.current.getContext("2d", { willReadFrequently: true });
     ctx_source.imageSmoothingEnabled = true;   // These two options keep the map preview consistent on Chrome(ium). Otherwise the first render after changing
     ctx_source.imageSmoothingQuality = "high"; // map x or z size is pixelated to a noticeably lower quality. This is not a solution to the cause but a
                                                // workaround the effect (I do not know exactly why this happens: maybe it is to do with
@@ -264,6 +312,7 @@ class MapPreview extends Component {
     const {
       coloursJSON,
       selectedBlocks,
+      disabledTones,
       optionValue_modeNBTOrMapdat,
       optionValue_mapSize_x,
       optionValue_mapSize_y,
@@ -273,18 +322,21 @@ class MapPreview extends Component {
       optionValue_transparencyTolerance,
       optionValue_betterColour,
       optionValue_dithering,
+      optionValue_dithering_propagation_red,
+      optionValue_dithering_propagation_green,
+      optionValue_dithering_propagation_blue,
       onGetMapMaterials,
       onMapPreviewWorker_begin,
     } = this.props;
-    const ctx_source = canvasRef_source.current.getContext("2d");
+    const ctx_source = canvasRef_source.current.getContext("2d", { willReadFrequently: true });
     const canvasImageData = ctx_source.getImageData(0, 0, ctx_source.canvas.width, ctx_source.canvas.height);
     const t0 = performance.now();
-    this.mapCanvasWorker = new Worker(MapCanvasWorker);
+    this.mapCanvasWorker = new WorkerBuilder(MapCanvasWorker);
     this.mapCanvasWorker.onmessage = (e) => {
       if (e.data.head === "PIXELS_MATERIALS_CURRENTSELECTEDBLOCKS") {
         const t1 = performance.now();
         console.log(`Calculated map preview data in ${(t1 - t0).toString()}ms`);
-        const ctx_display = canvasRef_display.current.getContext("2d");
+        const ctx_display = canvasRef_display.current.getContext("2d", { willReadFrequently: true });
         ctx_display.putImageData(e.data.body.pixels, 0, 0);
         this.setState({ workerProgress: 1 });
         onGetMapMaterials({
@@ -303,9 +355,11 @@ class MapPreview extends Component {
         coloursJSON: coloursJSON,
         MapModes: MapModes,
         WhereSupportBlocksModes: WhereSupportBlocksModes,
+        ColourMethods: ColourMethods,
         DitherMethods: DitherMethods,
         canvasImageData: canvasImageData,
         selectedBlocks: selectedBlocks,
+        disabledTones: disabledTones,
         optionValue_modeNBTOrMapdat: optionValue_modeNBTOrMapdat,
         optionValue_mapSize_x: optionValue_mapSize_x,
         optionValue_mapSize_y: optionValue_mapSize_y,
@@ -315,21 +369,106 @@ class MapPreview extends Component {
         optionValue_transparencyTolerance: optionValue_transparencyTolerance,
         optionValue_betterColour: optionValue_betterColour,
         optionValue_dithering: optionValue_dithering,
+        optionValue_dithering_propagation_red: optionValue_dithering_propagation_red,
+        optionValue_dithering_propagation_green: optionValue_dithering_propagation_green,
+        optionValue_dithering_propagation_blue: optionValue_dithering_propagation_blue,
       },
     });
   }
 
   increasePreviewScale = () => {
-    this.setState({
-      mapPreviewSizeScale: this.state.mapPreviewSizeScale * 1.2,
-    });
+    try {
+      const newScale = this.state.mapPreviewSizeScale * 1.2;
+      this.setState({
+        mapPreviewSizeScale: newScale,
+      });
+    } catch (error) {
+      console.warn('Error in increasePreviewScale:', error);
+    }
   };
 
   decreasePreviewScale = () => {
-    this.setState({
-      mapPreviewSizeScale: this.state.mapPreviewSizeScale / 1.2,
+    try {
+      this.setState({
+        mapPreviewSizeScale: this.state.mapPreviewSizeScale / 1.2,
+      });
+    } catch (error) {
+      console.warn('Error in decreasePreviewScale:', error);
+    }
+  };
+
+  calculateOptimalScale = () => {
+    try {
+      const { optionValue_mapSize_x, optionValue_mapSize_y, optionValue_autoZoom } = this.props;
+      if (!optionValue_autoZoom || this.isUpdatingScale) return null;
+
+      const containerWidth = 788; // 808 - 20px padding
+      const containerHeight = 500;
+
+      const mapWidth = 128 * optionValue_mapSize_x;
+      const mapHeight = 128 * optionValue_mapSize_y;
+
+      if (mapWidth <= 0 || mapHeight <= 0) return null;
+
+      const maxScaleX = containerWidth / mapWidth;
+      const maxScaleY = containerHeight / mapHeight;
+      const optimalScale = Math.min(maxScaleX, maxScaleY);
+
+      const minScale = 0.2;
+      
+      return Math.max(optimalScale, minScale);
+    } catch (error) {
+      console.warn('Error in calculateOptimalScale:', error);
+      return null;
+    }
+  };
+
+  handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState(prevState => ({
+      dragCounter: prevState.dragCounter + 1,
+      isDragOver: true
+    }));
+  };
+
+  handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState(prevState => {
+      const newCounter = prevState.dragCounter - 1;
+      return {
+        dragCounter: newCounter,
+        isDragOver: newCounter === 0 ? false : prevState.isDragOver
+      };
     });
   };
+
+  handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    this.setState({
+      isDragOver: false,
+      dragCounter: 0
+    });
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+
+      if (file.type.startsWith('image/')) {
+        this.props.onFileDialogEvent({ target: { files: [file] } });
+      }
+    }
+  };
+
+  componentDidMount() {}
 
   componentWillUnmount() {
     this.mapCanvasWorker.terminate();
@@ -342,38 +481,50 @@ class MapPreview extends Component {
       optionValue_mapSize_y,
       optionValue_cropImage,
       optionValue_showGridOverlay,
+      optionValue_autoZoom, // eslint-disable-line no-unused-vars
       onFileDialogEvent,
       uploadedImage,
     } = this.props;
-    const { mapPreviewSizeScale, workerProgress } = this.state;
+    const { mapPreviewSizeScale, workerProgress, isDragOver } = this.state;
     return (
-      <div className="section mapPreviewDiv">
+      <div className={`section mapPreviewDiv ${optionValue_autoZoom ? 'autoZoomEnabled' : ''}`}>
         <h2>{getLocaleString("MAP-PREVIEW/TITLE")}</h2>
-        <input type="file" className="imgUpload" ref={this.fileInputRef} onChange={onFileDialogEvent} />
-        <div>
-          <span
-            className="gridOverlay"
-            style={{
-              backgroundImage: `url(${IMG_GridOverlay})`,
-              display: optionValue_showGridOverlay ? "block" : "none",
-              width: `${(mapPreviewSizeScale * 128 * optionValue_mapSize_x).toString()}px`,
-              height: `${(mapPreviewSizeScale * 128 * optionValue_mapSize_y).toString()}px`,
-              backgroundSize: `${(mapPreviewSizeScale * 128).toString()}px`,
-            }}
-          />
-          <canvas
-            className="mapCanvas"
-            width={128 * optionValue_mapSize_x}
-            height={128 * optionValue_mapSize_y}
-            ref={this.canvasRef_display}
-            style={{
-              width: `${(mapPreviewSizeScale * 128 * optionValue_mapSize_x).toString()}px`,
-              height: `${(mapPreviewSizeScale * 128 * optionValue_mapSize_y).toString()}px`,
-            }}
-            onClick={() => this.fileInputRef.current.click()}
-          />
-          <canvas className="displayNone" width={128 * optionValue_mapSize_x} height={128 * optionValue_mapSize_y} ref={this.canvasRef_source}></canvas>
+        <input type="file" className="imgUpload" accept=".jpg,.jpeg,.png,image/jpeg,image/png" ref={this.fileInputRef} onChange={onFileDialogEvent} />
+        
+        <div 
+          className={`${optionValue_autoZoom ? "autoZoomContainer" : ""} dropZone ${isDragOver ? 'dragOver' : ''}`}
+          ref={this.dropZoneRef}
+          onDragEnter={this.handleDragEnter}
+          onDragLeave={this.handleDragLeave}
+          onDragOver={this.handleDragOver}
+          onDrop={this.handleDrop}
+        >
+          <div className={optionValue_autoZoom ? "canvasContainer" : ""}>
+            <span
+              className="gridOverlay"
+              style={{
+                backgroundImage: `url(${IMG_GridOverlay})`,
+                display: optionValue_showGridOverlay ? "block" : "none",
+                width: `${(mapPreviewSizeScale * 128 * optionValue_mapSize_x).toString()}px`,
+                height: `${(mapPreviewSizeScale * 128 * optionValue_mapSize_y).toString()}px`,
+                backgroundSize: `${(mapPreviewSizeScale * 128).toString()}px`,
+              }}
+            />
+            <canvas
+              className="mapCanvas"
+              width={128 * optionValue_mapSize_x}
+              height={128 * optionValue_mapSize_y}
+              ref={this.canvasRef_display}
+              style={{
+                width: `${(mapPreviewSizeScale * 128 * optionValue_mapSize_x).toString()}px`,
+                height: `${(mapPreviewSizeScale * 128 * optionValue_mapSize_y).toString()}px`,
+              }}
+              onClick={() => this.fileInputRef.current.click()}
+            />
+            <canvas className="displayNone" width={128 * optionValue_mapSize_x} height={128 * optionValue_mapSize_y} ref={this.canvasRef_source}></canvas>
+          </div>
         </div>
+        
         <div className="mapResolutionAndZoom">
           <div>
             <Tooltip tooltipText={getLocaleString("MAP-PREVIEW/BEST-RESOLUTION-TT")}>

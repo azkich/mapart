@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { useMapart } from "../../context/MapartContext";
+import { useLocale } from "../../hooks/useLocale";
 
 import CookieManager from "../../cookieManager";
 import BlockSelection from "./blockSelection";
@@ -11,6 +13,7 @@ import ViewOnline2D from "./viewOnline2D/viewOnline2D";
 import ViewOnline3D from "./viewOnline3D/viewOnline3D";
 
 import BackgroundColourModes from "./json/backgroundColourModes.json";
+import ColourMethods from "./json/colourMethods.json";
 import CropModes from "./json/cropModes.json";
 import DefaultPresets from "./json/defaultPresets.json";
 import DitherMethods from "./json/ditherMethods.json";
@@ -22,10 +25,80 @@ import IMG_Upload from "../../images/upload.png";
 
 import "./mapartController.css";
 
+/** Palette export .js is `const mapartcraftPalette = <JSON>;` — parse without eval/new Function. */
+function extractBalancedObjectLiteral(source, openBraceIndex) {
+  let depth = 0;
+  let inString = false;
+  let stringDelim = null;
+  let escape = false;
+  const start = openBraceIndex;
+  for (let i = openBraceIndex; i < source.length; i++) {
+    const ch = source[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === '\\') {
+        escape = true;
+      } else if (ch === stringDelim) {
+        inString = false;
+        stringDelim = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inString = true;
+      stringDelim = ch;
+      continue;
+    }
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) {
+        return source.slice(start, i + 1);
+      }
+    }
+  }
+  return null;
+}
+
+function parsePaletteExportJsFile(fileContent) {
+  const marker = 'const mapartcraftPalette = ';
+  const idx = fileContent.indexOf(marker);
+  if (idx === -1) {
+    throw new Error('Invalid palette format');
+  }
+  let pos = idx + marker.length;
+  while (pos < fileContent.length && /\s/.test(fileContent[pos])) pos++;
+  if (fileContent[pos] !== '{') {
+    throw new Error('Invalid palette format');
+  }
+  const jsonStr = extractBalancedObjectLiteral(fileContent, pos);
+  if (!jsonStr) {
+    throw new Error('Invalid palette format');
+  }
+  return JSON.parse(jsonStr);
+}
+
+// Wrapper component to use hooks
+const MapartControllerWrapper = (props) => {
+  const { state, actions } = useMapart();
+  const { getLocaleString } = useLocale();
+  
+  return (
+    <MapartController 
+      {...props} 
+      state={state} 
+      actions={actions} 
+      getLocaleString={getLocaleString} 
+    />
+  );
+};
+
 class MapartController extends Component {
   state = {
     coloursJSON: null,
     selectedBlocks: {},
+    disabledTones: {},
     optionValue_version: Object.values(SupportedVersions)[Object.keys(SupportedVersions).length - 1], // default to the latest version supported
     optionValue_modeNBTOrMapdat: MapModes.SCHEMATIC_NBT.uniqueId,
     optionValue_mapSize_x: 1,
@@ -39,11 +112,14 @@ class MapartController extends Component {
     optionValue_whereSupportBlocks: WhereSupportBlocksModes.ALL_OPTIMIZED.uniqueId,
     optionValue_supportBlock: "cobblestone",
     optionValue_transparency: false,
-    optionValue_transparencyTolerance: 128,
+    optionValue_transparencyTolerance: 0,
     optionValue_mapdatFilenameUseId: true,
     optionValue_mapdatFilenameIdStart: 0,
-    optionValue_betterColour: true,
+    optionValue_betterColour: ColourMethods.MapartCraftDefault.uniqueId,
     optionValue_dithering: DitherMethods.FloydSteinberg.uniqueId,
+    optionValue_dithering_propagation_red: 100,
+    optionValue_dithering_propagation_green: 100,
+    optionValue_dithering_propagation_blue: 100,
     optionValue_preprocessingEnabled: false,
     preProcessingValue_brightness: 100,
     preProcessingValue_contrast: 100,
@@ -51,6 +127,8 @@ class MapartController extends Component {
     preProcessingValue_backgroundColourSelect: BackgroundColourModes.OFF.uniqueId,
     preProcessingValue_backgroundColour: "#151515",
     optionValue_extras_moreStaircasingOptions: false,
+    optionValue_autoZoom: false,
+    optionValue_image2map: false, // New option for automatic map size calculation
     uploadedImage: null,
     uploadedImage_baseFilename: null,
     presets: [],
@@ -63,10 +141,15 @@ class MapartController extends Component {
     mapPreviewWorker_inProgress: false,
     viewOnline_NBT: null,
     viewOnline_3D: false,
+    showPaletteFormatModal: false,
   };
 
   constructor(props) {
     super(props);
+    
+    // Get getLocaleString from props
+    this.getLocaleString = props.getLocaleString;
+    
     // update default presets to latest version; done via checking for localeString
     CookieManager.init();
     let cookiesPresets_loaded = JSON.parse(CookieManager.touchCookie("mapartcraft_presets", JSON.stringify(DefaultPresets)));
@@ -89,6 +172,7 @@ class MapartController extends Component {
 
     for (const colourSetId of Object.keys(this.state.coloursJSON)) {
       this.state.selectedBlocks[colourSetId] = "-1";
+      this.state.disabledTones[colourSetId] = new Set();
     }
 
     const cookieMCVersion = CookieManager.touchCookie("mapartcraft_mcversion", Object.values(SupportedVersions)[Object.keys(SupportedVersions).length - 1].MCVersion);
@@ -96,6 +180,10 @@ class MapartController extends Component {
     if (supportedVersionFound !== undefined) {
       this.state.optionValue_version = supportedVersionFound;
     }
+
+    // Load image2map setting from cookie
+    const cookieImage2Map = CookieManager.touchCookie("mapartcraft_image2map", "false");
+    this.state.optionValue_image2map = cookieImage2Map === "true";
 
     const URLParams = new URL(window.location).searchParams;
     if (URLParams.has("preset")) {
@@ -127,8 +215,11 @@ class MapartController extends Component {
     const files = e.dataTransfer.files;
     if (files.length) {
       const file = files[0];
-      const imgUrl = URL.createObjectURL(file);
-      this.loadUploadedImageFromURL(imgUrl, "mapart");
+      // Only accept image files
+      if (file.type.startsWith('image/')) {
+        const imgUrl = URL.createObjectURL(file);
+        this.loadUploadedImageFromURL(imgUrl, file.name.replace(/\.[^/.]+$/, ""));
+      }
     }
   }.bind(this);
 
@@ -138,8 +229,11 @@ class MapartController extends Component {
     const files = e.clipboardData.files;
     if (files.length) {
       const file = files[0];
-      const imgUrl = URL.createObjectURL(file);
-      this.loadUploadedImageFromURL(imgUrl, "mapart");
+      // Only accept image files
+      if (file.type.startsWith('image/')) {
+        const imgUrl = URL.createObjectURL(file);
+        this.loadUploadedImageFromURL(imgUrl, file.name.replace(/\.[^/.]+$/, ""));
+      }
     }
   }.bind(this);
 
@@ -153,6 +247,8 @@ class MapartController extends Component {
   }
 
   componentWillUnmount() {
+    // Ensure page scroll is restored when leaving the page
+    document.body.style.overflow = '';
     document.removeEventListener("dragover", this.eventListener_dragover);
     document.removeEventListener("drop", this.eventListener_drop);
     document.removeEventListener("paste", this.eventListener_paste);
@@ -175,9 +271,35 @@ class MapartController extends Component {
       this.setState({
         uploadedImage: img,
         uploadedImage_baseFilename: baseFilename,
+      }, () => {
+        // Auto-calculate map size if image2map is enabled
+        if (this.state.optionValue_image2map) {
+          this.calculateMapSizeFromImage(img);
+        }
       });
     };
     img.src = imageURL;
+  }
+
+  calculateMapSizeFromImage(img) {
+    // Calculate optimal map size based on image dimensions
+    // Standard map size is 128x128 pixels
+    const mapPixelSize = 128;
+    const imageWidth = img.width;
+    const imageHeight = img.height;
+    
+    // Calculate how many maps we need for each dimension
+    const mapsX = Math.ceil(imageWidth / mapPixelSize);
+    const mapsY = Math.ceil(imageHeight / mapPixelSize);
+    
+    // Ensure minimum size of 1x1
+    const finalMapsX = Math.max(1, mapsX);
+    const finalMapsY = Math.max(1, mapsY);
+    
+    this.setState({
+      optionValue_mapSize_x: finalMapsX,
+      optionValue_mapSize_y: finalMapsY,
+    });
   }
 
   handleChangeColourSetBlock = (colourSetId, blockId) => {
@@ -214,6 +336,21 @@ class MapartController extends Component {
     });
   };
 
+  handleToggleColourTone = (colourSetId, tone) => {
+    let disabledTones = { ...this.state.disabledTones };
+
+    const set = disabledTones[colourSetId];
+
+    if (set.has(tone))
+      set.delete(tone);
+    else
+      set.add(tone);
+
+    this.setState({
+      disabledTones,
+    });
+  };
+
   onOptionChange_modeNBTOrMapdat = (e) => {
     const mode = parseInt(e.target.value);
     this.setState({ optionValue_modeNBTOrMapdat: mode });
@@ -241,15 +378,21 @@ class MapartController extends Component {
   };
 
   onOptionChange_mapSize_x = (value) => {
-    this.setState({
-      optionValue_mapSize_x: value,
-    });
+    // Only allow manual changes if image2map is disabled
+    if (!this.state.optionValue_image2map) {
+      this.setState({
+        optionValue_mapSize_x: value,
+      });
+    }
   };
 
   onOptionChange_mapSize_y = (value) => {
-    this.setState({
-      optionValue_mapSize_y: value,
-    });
+    // Only allow manual changes if image2map is disabled
+    if (!this.state.optionValue_image2map) {
+      this.setState({
+        optionValue_mapSize_y: value,
+      });
+    }
   };
 
   onOptionChange_cropImage = (e) => {
@@ -320,15 +463,26 @@ class MapartController extends Component {
     });
   };
 
-  onOptionChange_BetterColour = () => {
-    this.setState({
-      optionValue_betterColour: !this.state.optionValue_betterColour,
-    });
+  onOptionChange_BetterColour = (e) => {
+    const colourValue = parseInt(e.target.value);
+    this.setState({ optionValue_betterColour: colourValue });
   };
 
   onOptionChange_dithering = (e) => {
     const ditheringValue = parseInt(e.target.value);
     this.setState({ optionValue_dithering: ditheringValue });
+  };
+
+  onOptionChange_dithering_propagation_red = (value) => {
+    this.setState({ optionValue_dithering_propagation_red: value });
+  };
+
+  onOptionChange_dithering_propagation_green = (value) => {
+    this.setState({ optionValue_dithering_propagation_green: value });
+  };
+
+  onOptionChange_dithering_propagation_blue = (value) => {
+    this.setState({ optionValue_dithering_propagation_blue: value });
   };
 
   onOptionChange_WhereSupportBlocks = (e) => {
@@ -386,6 +540,27 @@ class MapartController extends Component {
     }
   };
 
+  onOptionChange_autoZoom = () => {
+    this.setState({
+      optionValue_autoZoom: !this.state.optionValue_autoZoom,
+    });
+  };
+
+  onOptionChange_image2map = () => {
+    const newImage2MapValue = !this.state.optionValue_image2map;
+    this.setState({
+      optionValue_image2map: newImage2MapValue,
+    }, () => {
+      // Save setting to cookie
+      CookieManager.setCookie("mapartcraft_image2map", newImage2MapValue.toString());
+      
+      // If enabling image2map and we have an uploaded image, calculate the size
+      if (newImage2MapValue && this.state.uploadedImage) {
+        this.calculateMapSizeFromImage(this.state.uploadedImage);
+      }
+    });
+  };
+
   onGetViewOnlineNBT = (viewOnline_NBT) => {
     this.setState({ viewOnline_NBT });
   };
@@ -403,11 +578,52 @@ class MapartController extends Component {
   }
 
   handleGetPDNPaletteClicked = () => {
-    const { getLocaleString } = this.props;
+    window.scrollTo(0, 0);
+    this.setState({ showPaletteFormatModal: true });
+    document.body.style.overflow = 'hidden';
+  };
+
+  closePaletteFormatModal = () => {
+    this.setState({ showPaletteFormatModal: false });
+    document.body.style.overflow = '';
+  };
+
+  getColoursToExport = () => {
     const { coloursJSON, selectedBlocks, optionValue_modeNBTOrMapdat, optionValue_staircasing } = this.state;
+    const toneKeysToExport = Object.values(Object.values(MapModes).find((mapMode) => mapMode.uniqueId === optionValue_modeNBTOrMapdat).staircaseModes).find(
+      (staircaseMode) => staircaseMode.uniqueId === optionValue_staircasing
+    ).toneKeys;
+    
+    const colours = [];
+    for (const [selectedBlock_colourSetId, selectedBlock_blockId] of Object.entries(selectedBlocks)) {
+      if (selectedBlock_blockId !== "-1") {
+        let blockColours = coloursJSON[selectedBlock_colourSetId].tonesRGB;
+        for (const toneKeyToExport of toneKeysToExport) {
+          colours.push(blockColours[toneKeyToExport]);
+        }
+      }
+    }
+    return colours;
+  };
+
+  generatePaintNetPalette = () => {
+    const { getLocaleString } = this.props;
+    const { coloursJSON, selectedBlocks, optionValue_staircasing } = this.state;
+    const colours = this.getColoursToExport();
+    
+    if (colours.length === 0) {
+      alert(getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-NONE-SELECTED"));
+      return;
+    } else if (colours.length > 96) {
+      alert(
+        `${getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-MAX-COLOURS-1")}${colours.length.toString()}${getLocaleString(
+          "BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-MAX-COLOURS-2"
+        )}`
+      );
+    }
+
     let paletteText =
-      "; paint.net Palette File\n; Generated by MapartCraft\n; Link to preset: " +
-      this.selectedBlocksToURL() +
+      "; paint.net Palette File\n; Generated by Mapartcraft\n; Thanks for using our service" +
       (Object.entries(selectedBlocks).some(([colourSetId, blockId]) => blockId !== "-1" && coloursJSON[colourSetId].blocks[blockId].presetIndex === "CUSTOM")
         ? "\n; Custom blocks not listed!"
         : "") +
@@ -425,36 +641,194 @@ class MapartController extends Component {
         ? "enabled"
         : "disabled") +
       "\n";
-    let numberOfColoursExported = 0;
-    const toneKeysToExport = Object.values(Object.values(MapModes).find((mapMode) => mapMode.uniqueId === optionValue_modeNBTOrMapdat).staircaseModes).find(
-      (staircaseMode) => staircaseMode.uniqueId === optionValue_staircasing
-    ).toneKeys; // this .find stuff is annoying.
-    // TODO change from uniqueId to key
-    for (const [selectedBlock_colourSetId, selectedBlock_blockId] of Object.entries(selectedBlocks)) {
-      if (selectedBlock_blockId !== "-1") {
-        let colours = coloursJSON[selectedBlock_colourSetId].tonesRGB;
-        for (const toneKeyToExport of toneKeysToExport) {
-          numberOfColoursExported += 1;
-          paletteText += "FF";
-          for (let i = 0; i < 3; i++) {
-            paletteText += Number(colours[toneKeyToExport][i]).toString(16).padStart(2, "0").toUpperCase();
-          }
-          paletteText += "\n";
-        }
+    
+    for (const colour of colours) {
+      paletteText += "FF";
+      for (let i = 0; i < 3; i++) {
+        paletteText += Number(colour[i]).toString(16).padStart(2, "0").toUpperCase();
       }
+      paletteText += "\n";
     }
-    if (numberOfColoursExported === 0) {
-      alert(getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-NONE-SELECTED"));
-      return;
-    } else if (numberOfColoursExported > 96) {
-      alert(
-        `${getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-MAX-COLOURS-1")}${numberOfColoursExported.toString()}${getLocaleString(
-          "BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-MAX-COLOURS-2"
-        )}`
-      );
-    }
+    
     const downloadBlob = new Blob([paletteText], { type: "text/plain" });
     this.downloadBlobFile(downloadBlob, "MapartcraftPalette.txt");
+    this.closePaletteFormatModal();
+  };
+
+  generateGIMPPalette = () => {
+    const { getLocaleString } = this.props;
+    const colours = this.getColoursToExport();
+    
+    if (colours.length === 0) {
+      alert(getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-NONE-SELECTED"));
+      return;
+    }
+
+    let paletteText = "GIMP Palette\n";
+    paletteText += "Name: Mapartcraft Palette\n";
+    paletteText += "Columns: 0\n";
+    paletteText += "# Generated by Mapartcraft\n";
+    paletteText += "# Thanks for using our service\n";
+    
+    for (const colour of colours) {
+      const r = Math.round(colour[0]);
+      const g = Math.round(colour[1]);
+      const b = Math.round(colour[2]);
+      paletteText += `${r}\t${g}\t${b}\tUntitled\n`;
+    }
+    
+    const downloadBlob = new Blob([paletteText], { type: "text/plain" });
+    this.downloadBlobFile(downloadBlob, "MapartcraftPalette.gpl");
+    this.closePaletteFormatModal();
+  };
+
+  generatePhotoshopPalette = () => {
+    const { getLocaleString } = this.props;
+    const colours = this.getColoursToExport();
+    
+    if (colours.length === 0) {
+      alert(getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-NONE-SELECTED"));
+      return;
+    }
+
+    // Photoshop .aco format (Adobe Color Swatch) - binary format
+    // Format: Version (2 bytes), Number of colors (2 bytes), then for each color:
+    // Color space (2 bytes), RGB values (6 bytes), Name length (2 bytes), Name (variable)
+    const buffer = new ArrayBuffer(4 + colours.length * 10);
+    const view = new DataView(buffer);
+    
+    // Version 1 (2 bytes, big-endian)
+    view.setUint16(0, 1, false);
+    
+    // Number of colors (2 bytes, big-endian)
+    view.setUint16(2, colours.length, false);
+    
+    let offset = 4;
+    
+    for (let i = 0; i < colours.length; i++) {
+      const colour = colours[i];
+      const r = Math.round(colour[0]);
+      const g = Math.round(colour[1]);
+      const b = Math.round(colour[2]);
+      
+      // Color space: 0 = RGB (2 bytes, big-endian)
+      view.setUint16(offset, 0, false);
+      offset += 2;
+      
+      // RGB values (6 bytes, big-endian, 0-65535 range)
+      // Convert 0-255 to 0-65535: value * 65535 / 255
+      view.setUint16(offset, Math.round(r * 257), false);
+      offset += 2;
+      view.setUint16(offset, Math.round(g * 257), false);
+      offset += 2;
+      view.setUint16(offset, Math.round(b * 257), false);
+      offset += 2;
+      
+      // Name length (2 bytes, big-endian) - 0 for no name
+      view.setUint16(offset, 0, false);
+      offset += 2;
+    }
+    
+    const downloadBlob = new Blob([buffer], { type: "application/octet-stream" });
+    this.downloadBlobFile(downloadBlob, "MapartcraftPalette.aco");
+    this.closePaletteFormatModal();
+  };
+
+  handleGenerateColorScheme = () => {
+    const { getLocaleString } = this.props;
+    const { coloursJSON, selectedBlocks, optionValue_modeNBTOrMapdat, optionValue_staircasing } = this.state;
+    
+    const selectedBlocksArray = Object.entries(selectedBlocks).filter(([colourSetId, blockId]) => blockId !== "-1");
+    
+    if (selectedBlocksArray.length === 0) {
+      alert(getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD-WARNING-NONE-SELECTED"));
+      return;
+    }
+
+    const toneKeysToExport = Object.values(Object.values(MapModes).find((mapMode) => mapMode.uniqueId === optionValue_modeNBTOrMapdat).staircaseModes).find(
+      (staircaseMode) => staircaseMode.uniqueId === optionValue_staircasing
+    ).toneKeys;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const squareSize = 80;
+    const padding = 15;
+    const textHeight = 25;
+    const titleHeight = 30;
+    const squaresPerRow = 3;
+
+    const rows = selectedBlocksArray.length;
+    const canvasWidth = squaresPerRow * squareSize + (squaresPerRow + 1) * padding;
+    const canvasHeight = rows * (squareSize + textHeight + titleHeight + padding) + padding;
+
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Colour scheme — Mapartcraft', canvasWidth / 2, 20);
+
+    // RGB to HEX
+    const rgbToHex = (r, g, b) => {
+      return '#' + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      }).join('').toUpperCase();
+    };
+    
+    const getToneName = (toneKey) => {
+      const toneNames = {
+        'dark': 'Dark',
+        'normal': 'Normal', 
+        'light': 'Light',
+        'unobtainable': 'Unobtainable'
+      };
+      return toneNames[toneKey] || toneKey;
+    };
+    
+    selectedBlocksArray.forEach(([colourSetId, blockId], rowIndex) => {
+      const colourSet = coloursJSON[colourSetId];
+      const block = colourSet.blocks[blockId];
+      const colours = colourSet.tonesRGB;
+
+      const blockTitleY = 40 + rowIndex * (squareSize + textHeight + titleHeight + padding);
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(block.displayName, padding, blockTitleY);
+
+      toneKeysToExport.forEach((toneKey, colIndex) => {
+        const x = colIndex * squareSize + (colIndex + 1) * padding;
+        const y = blockTitleY + 5;
+
+        const rgb = colours[toneKey];
+        const hexColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
+        ctx.fillStyle = hexColor;
+        ctx.fillRect(x, y, squareSize, squareSize);
+
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, squareSize, squareSize);
+
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(getToneName(toneKey), x + squareSize / 2, y + squareSize + 15);
+
+        ctx.font = '10px Arial';
+        ctx.fillText(hexColor, x + squareSize / 2, y + squareSize + 28);
+      });
+    });
+
+    canvas.toBlob((blob) => {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+      this.downloadBlobFile(blob, `color-scheme-${timestamp}.png`);
+    }, 'image/png');
   };
 
   handlePresetChange = (e) => {
@@ -542,22 +916,123 @@ class MapartController extends Component {
           });
       }
     }
-    return "https://rebane2001.com/mapartcraft/?preset=" + presetQueryString;
+    const publicPath = (process.env.PUBLIC_URL || "").replace(/\/$/, "");
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const pathPrefix = publicPath ? `${publicPath}/` : "/";
+    return `${base}${pathPrefix}?preset=${presetQueryString}`;
   };
 
-  handleSharePreset = () => {
+  handleExportPreset = () => {
     const { getLocaleString } = this.props;
     const { coloursJSON, selectedBlocks } = this.state;
     if (Object.keys(selectedBlocks).every((colourSetId) => selectedBlocks[colourSetId] === "-1")) {
-      alert(getLocaleString("BLOCK-SELECTION/PRESETS/SHARE-WARNING-NONE-SELECTED"));
-    } else {
-      if (
-        Object.entries(selectedBlocks).some(([colourSetId, blockId]) => blockId !== "-1" && coloursJSON[colourSetId].blocks[blockId].presetIndex === "CUSTOM")
-      ) {
-        alert(getLocaleString("BLOCK-SELECTION/ADD-CUSTOM/NO-EXPORT"));
-      }
-      prompt(getLocaleString("BLOCK-SELECTION/PRESETS/SHARE-LINK"), this.selectedBlocksToURL());
+      alert(getLocaleString("BLOCK-SELECTION/PRESETS/EXPORT-WARNING-NONE-SELECTED"));
+      return;
     }
+    
+    if (
+      Object.entries(selectedBlocks).some(([colourSetId, blockId]) => blockId !== "-1" && coloursJSON[colourSetId].blocks[blockId].presetIndex === "CUSTOM")
+    ) {
+      alert(getLocaleString("BLOCK-SELECTION/ADD-CUSTOM/NO-EXPORT"));
+      return;
+    }
+    
+    let paletteName = prompt(getLocaleString("BLOCK-SELECTION/PRESETS/EXPORT-PROMPT-ENTER-NAME"), "");
+    if (paletteName === null) {
+      return;
+    }
+
+    if (paletteName.trim() === "") {
+      paletteName = "Exported Palette";
+    }
+
+    let exportData = { 
+      name: paletteName.trim(),
+      blocks: [],
+      exportedAt: new Date().toISOString()
+    };
+    
+    Object.keys(selectedBlocks).forEach((colourSetId) => {
+      if (selectedBlocks[colourSetId] !== "-1" && coloursJSON[colourSetId].blocks[selectedBlocks[colourSetId]].presetIndex !== "CUSTOM") {
+        exportData.blocks.push([parseInt(colourSetId), parseInt(coloursJSON[colourSetId].blocks[selectedBlocks[colourSetId]].presetIndex)]);
+      }
+    });
+    
+    const jsContent = `// MapartCraft Palette Export
+// Name: ${exportData.name}
+// Exported at: ${exportData.exportedAt}
+const mapartcraftPalette = ${JSON.stringify(exportData, null, 2)};
+
+// Export for use in browser
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = mapartcraftPalette;
+}`;
+    
+    const downloadBlob = new Blob([jsContent], { type: "application/javascript" });
+    const sanitizedName = exportData.name.replace(/[^a-zA-Z0-9\-_]/g, '_');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+    this.downloadBlobFile(downloadBlob, `${sanitizedName}-${timestamp}.js`);
+  };
+
+  handleImportPreset = () => {
+    const { getLocaleString } = this.props;
+    
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.js,application/javascript,text/javascript';
+    input.style.display = 'none';
+    
+    input.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const fileContent = e.target.result;
+
+          const importedData = parsePaletteExportJsFile(fileContent);
+
+          if (!importedData || !importedData.blocks || !Array.isArray(importedData.blocks)) {
+            throw new Error('Invalid palette format');
+          }
+
+          this.handleChangeColourSetBlocks(importedData.blocks);
+
+          const { presets } = this.state;
+          const paletteName = importedData.name || "Imported Palette";
+
+          const otherPresets = presets.filter((preset) => preset.name !== paletteName);
+
+          let newPreset = { name: paletteName, blocks: importedData.blocks };
+          const presets_new = [...otherPresets, newPreset];
+
+          this.setState({
+            presets: presets_new,
+            selectedPresetName: paletteName,
+          });
+          CookieManager.setCookie("mapartcraft_presets", JSON.stringify(presets_new));
+          
+          alert(getLocaleString("BLOCK-SELECTION/PRESETS/IMPORT-SUCCESS-WITH-SAVE") + " \"" + paletteName + "\"");
+          
+        } catch (error) {
+          console.error('Import error:', error);
+          alert(getLocaleString("BLOCK-SELECTION/PRESETS/IMPORT-ERROR"));
+        } finally {
+          document.body.removeChild(input);
+        }
+      };
+      
+      reader.onerror = () => {
+        alert(getLocaleString("BLOCK-SELECTION/PRESETS/IMPORT-ERROR"));
+        document.body.removeChild(input);
+      };
+      
+      reader.readAsText(file);
+    });
+    
+    document.body.appendChild(input);
+    input.click();
   };
 
   URLToPreset = (encodedPreset) => {
@@ -571,6 +1046,8 @@ class MapartController extends Component {
         document.body.style.backgroundSize="100%";
         fetch("https://derpibooru.org/api/v1/json/search/images?q=scenery,score.gte:1000,safe&sf=random&per_page=1").then(req=>req.json()).then(derp=>document.body.style.backgroundImage=`url(${derp.images[0].representations.full})`);
         return null;
+      default:
+        break;
     }
     if (!/^[0-9a-zQ-ZA-P]*$/g.test(encodedPreset)) {
       onCorruptedPreset();
@@ -736,10 +1213,11 @@ class MapartController extends Component {
   };
 
   render() {
-    const { getLocaleString } = this.props;
+    const { getLocaleString } = this;
     const {
       coloursJSON,
       selectedBlocks,
+      disabledTones,
       optionValue_version,
       optionValue_modeNBTOrMapdat,
       optionValue_mapSize_x,
@@ -758,6 +1236,9 @@ class MapartController extends Component {
       optionValue_mapdatFilenameIdStart,
       optionValue_betterColour,
       optionValue_dithering,
+      optionValue_dithering_propagation_red,
+      optionValue_dithering_propagation_green,
+      optionValue_dithering_propagation_blue,
       optionValue_preprocessingEnabled,
       preProcessingValue_brightness,
       preProcessingValue_contrast,
@@ -765,6 +1246,8 @@ class MapartController extends Component {
       preProcessingValue_backgroundColourSelect,
       preProcessingValue_backgroundColour,
       optionValue_extras_moreStaircasingOptions,
+      optionValue_autoZoom,
+      optionValue_image2map,
       uploadedImage,
       uploadedImage_baseFilename,
       presets,
@@ -773,13 +1256,16 @@ class MapartController extends Component {
       mapPreviewWorker_inProgress,
       viewOnline_NBT,
       viewOnline_3D,
+      showPaletteFormatModal,
     } = this.state;
     return (
       <div className="mapartController">
         <BlockSelection
           getLocaleString={getLocaleString}
           coloursJSON={coloursJSON}
+          disabledTones={disabledTones}
           onChangeColourSetBlock={this.handleChangeColourSetBlock}
+          onToggleColourTone={this.handleToggleColourTone}
           optionValue_version={optionValue_version}
           optionValue_modeNBTOrMapdat={optionValue_modeNBTOrMapdat}
           optionValue_staircasing={optionValue_staircasing}
@@ -790,8 +1276,10 @@ class MapartController extends Component {
           onPresetChange={this.handlePresetChange}
           onDeletePreset={this.handleDeletePreset}
           onSavePreset={this.handleSavePreset}
-          onSharePreset={this.handleSharePreset}
+          onExportPreset={this.handleExportPreset}
+          onImportPreset={this.handleImportPreset}
           onGetPDNPaletteClicked={this.handleGetPDNPaletteClicked}
+          onGenerateColorScheme={this.handleGenerateColorScheme}
           handleAddCustomBlock={this.handleAddCustomBlock}
           handleDeleteCustomBlock={this.handleDeleteCustomBlock}
         />
@@ -800,6 +1288,7 @@ class MapartController extends Component {
             getLocaleString={getLocaleString}
             coloursJSON={coloursJSON}
             selectedBlocks={selectedBlocks}
+            disabledTones={disabledTones}
             optionValue_version={optionValue_version}
             optionValue_modeNBTOrMapdat={optionValue_modeNBTOrMapdat}
             optionValue_mapSize_x={optionValue_mapSize_x}
@@ -815,12 +1304,16 @@ class MapartController extends Component {
             optionValue_transparencyTolerance={optionValue_transparencyTolerance}
             optionValue_betterColour={optionValue_betterColour}
             optionValue_dithering={optionValue_dithering}
+            optionValue_dithering_propagation_red={optionValue_dithering_propagation_red}
+            optionValue_dithering_propagation_green={optionValue_dithering_propagation_green}
+            optionValue_dithering_propagation_blue={optionValue_dithering_propagation_blue}
             optionValue_preprocessingEnabled={optionValue_preprocessingEnabled}
             preProcessingValue_brightness={preProcessingValue_brightness}
             preProcessingValue_contrast={preProcessingValue_contrast}
             preProcessingValue_saturation={preProcessingValue_saturation}
             preProcessingValue_backgroundColourSelect={preProcessingValue_backgroundColourSelect}
             preProcessingValue_backgroundColour={preProcessingValue_backgroundColour}
+            optionValue_autoZoom={optionValue_autoZoom}
             uploadedImage={uploadedImage}
             onFileDialogEvent={this.onFileDialogEvent}
             onGetMapMaterials={this.handleSetMapMaterials}
@@ -866,6 +1359,12 @@ class MapartController extends Component {
               onOptionChange_BetterColour={this.onOptionChange_BetterColour}
               optionValue_dithering={optionValue_dithering}
               onOptionChange_dithering={this.onOptionChange_dithering}
+              optionValue_dithering_propagation_red={optionValue_dithering_propagation_red}
+              onOptionChange_dithering_propagation_red={this.onOptionChange_dithering_propagation_red}
+              optionValue_dithering_propagation_green={optionValue_dithering_propagation_green}
+              onOptionChange_dithering_propagation_green={this.onOptionChange_dithering_propagation_green}
+              optionValue_dithering_propagation_blue={optionValue_dithering_propagation_blue}
+              onOptionChange_dithering_propagation_blue={this.onOptionChange_dithering_propagation_blue}
               optionValue_preprocessingEnabled={optionValue_preprocessingEnabled}
               onOptionChange_PreProcessingEnabled={this.onOptionChange_PreProcessingEnabled}
               preProcessingValue_brightness={preProcessingValue_brightness}
@@ -880,6 +1379,10 @@ class MapartController extends Component {
               onOptionChange_PreProcessingBackgroundColour={this.onOptionChange_PreProcessingBackgroundColour}
               optionValue_extras_moreStaircasingOptions={optionValue_extras_moreStaircasingOptions}
               onOptionChange_extras_moreStaircasingOptions={this.onOptionChange_extras_moreStaircasingOptions}
+              optionValue_autoZoom={optionValue_autoZoom}
+              onOptionChange_autoZoom={this.onOptionChange_autoZoom}
+              optionValue_image2map={optionValue_image2map}
+              onOptionChange_image2map={this.onOptionChange_image2map}
             />
             <GreenButtons
               getLocaleString={getLocaleString}
@@ -902,6 +1405,9 @@ class MapartController extends Component {
               optionValue_mapdatFilenameIdStart={optionValue_mapdatFilenameIdStart}
               optionValue_betterColour={optionValue_betterColour}
               optionValue_dithering={optionValue_dithering}
+              optionValue_dithering_propagation_red={optionValue_dithering_propagation_red}
+              optionValue_dithering_propagation_green={optionValue_dithering_propagation_green}
+              optionValue_dithering_propagation_blue={optionValue_dithering_propagation_blue}
               optionValue_preprocessingEnabled={optionValue_preprocessingEnabled}
               preProcessingValue_brightness={preProcessingValue_brightness}
               preProcessingValue_contrast={preProcessingValue_contrast}
@@ -923,6 +1429,8 @@ class MapartController extends Component {
               optionValue_version={optionValue_version}
               optionValue_supportBlock={optionValue_supportBlock}
               currentMaterialsData={currentMaterialsData}
+              onChangeColourSetBlock={this.handleChangeColourSetBlock}
+              onFileDialogEvent={this.onFileDialogEvent}
             />
           ) : null}
         </div>
@@ -950,9 +1458,42 @@ class MapartController extends Component {
               onChooseViewOnline3D={this.onChooseViewOnline3D}
             />
           ))}
+        {showPaletteFormatModal && (
+          <div className="palette-format-modal-overlay" onClick={this.closePaletteFormatModal}>
+            <div className="palette-format-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="palette-format-modal-header">
+                <h3>Choose palette format</h3>
+                <button className="palette-format-modal-close" onClick={this.closePaletteFormatModal}>×</button>
+              </div>
+              <div className="palette-format-modal-body">
+                <button className="palette-format-option" onClick={this.generatePaintNetPalette}>
+                  <div className="palette-format-icon">🎨</div>
+                  <div className="palette-format-info">
+                    <div className="palette-format-name">paint.net</div>
+                    <div className="palette-format-ext">.txt</div>
+                  </div>
+                </button>
+                <button className="palette-format-option" onClick={this.generateGIMPPalette}>
+                  <div className="palette-format-icon">🖼️</div>
+                  <div className="palette-format-info">
+                    <div className="palette-format-name">GIMP</div>
+                    <div className="palette-format-ext">.gpl</div>
+                  </div>
+                </button>
+                <button className="palette-format-option" onClick={this.generatePhotoshopPalette}>
+                  <div className="palette-format-icon">✨</div>
+                  <div className="palette-format-info">
+                    <div className="palette-format-name">Photoshop</div>
+                    <div className="palette-format-ext">.aco</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 }
 
-export default MapartController;
+export default MapartControllerWrapper;

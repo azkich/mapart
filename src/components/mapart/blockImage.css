@@ -7,4 +7,5 @@
   margin-left: 3px;
   background-color: #222222;
   transition: background-color 0.2s;
+  outline: none;
 }

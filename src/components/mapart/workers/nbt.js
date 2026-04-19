@@ -1,3 +1,8 @@
+// eslint-disable-next-line import/no-anonymous-default-export
+// eslint-disable-next-line no-restricted-globals
+
+export default function NBTWorker (args) {
+
 // begin variables passed in onmessage
 var coloursJSON;
 var MapModes;
@@ -12,6 +17,7 @@ var currentSelectedBlocks;
 // end onmessage variables
 
 var exactColourCache = new Map(); // for mapping RGB that exactly matches in coloursJSON to colourSetId and tone
+var isNBTMode = false; // set per message based on header
 
 var progressReportHead;
 
@@ -276,7 +282,7 @@ class Map_NBT {
         },
         author: {
           type: TagTypes.string,
-          value: "rebane2001.com/mapartcraft",
+          value: "mapartcraft",
         },
         DataVersion: {
           type: TagTypes.int,
@@ -288,6 +294,7 @@ class Map_NBT {
     this.palette_colourSetId_paletteId = {}; // map coloursJSON colourSetIds to index of corresponding block in palette list
     this.palette_paletteId_colourSetId = []; // map paletteIds (index of an item in this list) to colourSetIds
     this.columnHeightsCache = []; // appended to in getPhysicalLayout_individualColumn, used in setNBT_json_size
+    this.airPaletteId = null; // optional palette id for minecraft:air when transparency is used
   }
 
   constructPaletteLookups() {
@@ -301,6 +308,12 @@ class Map_NBT {
     // finally add noobline/scaffold material at the end, special key
     this.palette_colourSetId_paletteId["NOOBLINE_SCAFFOLD"] = this.palette_paletteId_colourSetId.length;
     this.palette_paletteId_colourSetId.push("NOOBLINE_SCAFFOLD");
+    // If transparency is enabled, include minecraft:air in palette to represent empty space
+    if (optionValue_whereSupportBlocks !== undefined) {
+      this.airPaletteId = this.palette_paletteId_colourSetId.length;
+      this.palette_colourSetId_paletteId["__AIR__"] = this.airPaletteId;
+      this.palette_paletteId_colourSetId.push("__AIR__");
+    }
   }
 
   setNBT_json_palette() {
@@ -312,6 +325,8 @@ class Map_NBT {
           value: `minecraft:${optionValue_supportBlock.toLowerCase()}`,
         };
         // we expect the support block to be something non-exotic with no properties eg netherrack
+      } else if (colourSetId === "__AIR__") {
+        paletteItemToPush.Name = { type: TagTypes.string, value: "minecraft:air" };
       } else {
         let blockNBTData = coloursJSON[colourSetId].blocks[currentSelectedBlocks[colourSetId]].validVersions[optionValue_version.MCVersion];
         if (typeof blockNBTData === "string") {
@@ -397,6 +412,8 @@ class Map_NBT {
       const coloursLayoutBlock = mapColoursLayoutColumn[rowNumber];
 
       const previousHeight = currentHeight;
+      // Place explicit air block for fully transparent pixels
+      const isAir = coloursLayoutBlock.colourSetId === "__AIR__";
       switch (coloursLayoutBlock.tone) {
         case "dark": {
           currentHeight -= 1;
@@ -413,8 +430,7 @@ class Map_NBT {
           throw new Error("Unknown tone type");
         }
       }
-
-      physicalColumn.push(this.returnPhysicalBlock(columnNumber, currentHeight, rowNumber + 1, coloursLayoutBlock.colourSetId));
+      physicalColumn.push(this.returnPhysicalBlock(columnNumber, currentHeight, rowNumber + 1, isAir ? "__AIR__" : coloursLayoutBlock.colourSetId));
       // the + 1 is because the noobline offsets everything South one block
 
       // read docs/supportBlocks.md to know how this works
@@ -423,7 +439,7 @@ class Map_NBT {
           break;
         }
         case WhereSupportBlocksModes.IMPORTANT.uniqueId: {
-          if (isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) {
+          if (!isAir && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) {
             physicalColumn.push(this.returnPhysicalBlock(columnNumber, currentHeight - 1, rowNumber + 1, "NOOBLINE_SCAFFOLD"));
           }
           break;
@@ -433,12 +449,12 @@ class Map_NBT {
             case 0: {
               if (
                 coloursLayoutBlock.tone === "dark" ||
-                (coloursLayoutBlock.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock))
+                (!isAir && coloursLayoutBlock.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock))
               ) {
                 // first under-support block
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 1, rowNumber, "NOOBLINE_SCAFFOLD"));
               }
-              if (coloursLayoutBlock.tone === "dark" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) {
+              if (!isAir && coloursLayoutBlock.tone === "dark" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) {
                 // second under-support block
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 2, rowNumber, "NOOBLINE_SCAFFOLD"));
               }
@@ -449,13 +465,13 @@ class Map_NBT {
               if (
                 coloursLayoutBlock_0.tone === "light" ||
                 coloursLayoutBlock.tone === "dark" ||
-                isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_0) ||
-                (coloursLayoutBlock.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock))
+                (!isAir && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_0)) ||
+                (!isAir && coloursLayoutBlock.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock))
               ) {
                 // first under-support block
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 1, rowNumber, "NOOBLINE_SCAFFOLD"));
               }
-              if (coloursLayoutBlock.tone === "dark" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) {
+              if (!isAir && coloursLayoutBlock.tone === "dark" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) {
                 // second under-support block
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 2, rowNumber, "NOOBLINE_SCAFFOLD"));
               }
@@ -466,13 +482,13 @@ class Map_NBT {
               const coloursLayoutBlock_north = mapColoursLayoutColumn[rowNumber - 1];
               if (
                 coloursLayoutBlock.tone === "light" ||
-                isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock) ||
-                (coloursLayoutBlock.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_north))
+                (!isAir && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) ||
+                (!isAir && coloursLayoutBlock.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_north))
               ) {
                 // first under-support block
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, currentHeight - 1, rowNumber + 1, "NOOBLINE_SCAFFOLD"));
               }
-              if (coloursLayoutBlock.tone === "light" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_north)) {
+              if (!isAir && coloursLayoutBlock.tone === "light" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_north)) {
                 // second under-support block
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, currentHeight - 2, rowNumber + 1, "NOOBLINE_SCAFFOLD"));
               }
@@ -484,16 +500,16 @@ class Map_NBT {
               if (
                 coloursLayoutBlock_inQuestion.tone === "light" ||
                 coloursLayoutBlock.tone === "dark" ||
-                isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_inQuestion) ||
-                (coloursLayoutBlock.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) ||
-                (coloursLayoutBlock_inQuestion.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_north))
+                (!isAir && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_inQuestion)) ||
+                (!isAir && coloursLayoutBlock.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) ||
+                (!isAir && coloursLayoutBlock_inQuestion.tone === "normal" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_north))
               ) {
                 // first under-support block
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 1, rowNumber, "NOOBLINE_SCAFFOLD"));
               }
               if (
-                (coloursLayoutBlock.tone === "dark" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) ||
-                (coloursLayoutBlock_inQuestion.tone === "light" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_north))
+                (!isAir && coloursLayoutBlock.tone === "dark" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock)) ||
+                (!isAir && coloursLayoutBlock_inQuestion.tone === "light" && isSupportBlockMandatoryForColourSetIdAndTone(coloursLayoutBlock_north))
               ) {
                 // second under-support block
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 2, rowNumber, "NOOBLINE_SCAFFOLD"));
@@ -507,14 +523,14 @@ class Map_NBT {
           switch (rowNumber) {
             case 0: {
               physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 1, rowNumber, "NOOBLINE_SCAFFOLD"));
-              if (coloursLayoutBlock.tone === "dark") {
+              if (!isAir && coloursLayoutBlock.tone === "dark") {
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 2, rowNumber, "NOOBLINE_SCAFFOLD"));
               }
               break;
             }
             case mapColoursLayoutColumn.length - 1: {
               physicalColumn.push(this.returnPhysicalBlock(columnNumber, currentHeight - 1, rowNumber + 1, "NOOBLINE_SCAFFOLD"));
-              if (coloursLayoutBlock.tone === "light") {
+              if (!isAir && coloursLayoutBlock.tone === "light") {
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, currentHeight - 2, rowNumber + 1, "NOOBLINE_SCAFFOLD"));
               }
               // falls through
@@ -523,7 +539,7 @@ class Map_NBT {
             default: {
               physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 1, rowNumber, "NOOBLINE_SCAFFOLD"));
               const coloursLayoutBlock_inQuestion = mapColoursLayoutColumn[rowNumber - 1];
-              if (coloursLayoutBlock_inQuestion.tone === "light" || coloursLayoutBlock.tone === "dark") {
+              if ((!isAir && coloursLayoutBlock_inQuestion.tone === "light") || (!isAir && coloursLayoutBlock.tone === "dark")) {
                 physicalColumn.push(this.returnPhysicalBlock(columnNumber, previousHeight - 2, rowNumber, "NOOBLINE_SCAFFOLD"));
               }
               break;
@@ -565,7 +581,8 @@ class Map_NBT {
 
         for (let i = 0; i < physicalColumn.length; i++) {
           const physicalBlock = physicalColumn[i];
-          if (this.palette_paletteId_colourSetId[physicalBlock.state.value] === "NOOBLINE_SCAFFOLD") {
+          const paletteName = this.palette_paletteId_colourSetId[physicalBlock.state.value];
+          if (paletteName === "NOOBLINE_SCAFFOLD" || paletteName === "__AIR__") {
             continue;
           }
           if (ascending && physicalBlock.pos.value.value[1] < visibleBlocksHeight) {
@@ -751,8 +768,8 @@ function setupExactColourCache() {
     }
   }
   exactColourCache.set(0, {
-    // special transparent for mapdat
-    colourSetId: "-1",
+    // special transparent: mapdat uses -1, NBT uses __AIR__ sentinel
+    colourSetId: isNBTMode ? "__AIR__" : "-1",
     tone: "normal",
   });
 }
@@ -763,6 +780,9 @@ function exactRGBToColourSetIdAndTone(pixelRGB) {
 }
 
 function isSupportBlockMandatoryForColourSetIdAndTone(colourSetIdAndTone) {
+  if (!colourSetIdAndTone || colourSetIdAndTone.colourSetId === "__AIR__") {
+    return false;
+  }
   return coloursJSON[colourSetIdAndTone.colourSetId].blocks[currentSelectedBlocks[colourSetIdAndTone.colourSetId]].supportBlockMandatory;
 }
 
@@ -834,6 +854,8 @@ onmessage = (e) => {
 
   const headerMessage = e.data.head;
 
+  // Determine mode from header
+  isNBTMode = ["CREATE_NBT_JOINED_FOR_VIEW_ONLINE", "CREATE_NBT_JOINED", "CREATE_NBT_SPLIT"].includes(headerMessage);
   setupExactColourCache();
   setupColoursLayoutsFromPixelsData();
 
@@ -885,4 +907,6 @@ onmessage = (e) => {
       throw new Error("Unknown header message");
     }
   }
+};
+
 };

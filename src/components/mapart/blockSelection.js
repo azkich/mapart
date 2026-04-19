@@ -19,6 +19,14 @@ class BlockSelection extends Component {
     return `rgb(${RGBArray.join(", ")})`;
   }
 
+
+
+
+
+
+
+
+
   getColourSetBox = (colourSet) => {
     const { optionValue_staircasing } = this.props;
     let background;
@@ -70,21 +78,75 @@ class BlockSelection extends Component {
     );
   };
 
+  getColourSetTones = (colourSetId, colourSet, disabledTones, onToggleColourTone) => {
+    const { optionValue_staircasing } = this.props;
+    switch (optionValue_staircasing) {
+      case MapModes.SCHEMATIC_NBT.staircaseModes.CLASSIC.uniqueId:
+      case MapModes.SCHEMATIC_NBT.staircaseModes.VALLEY.uniqueId:
+        return (
+          <React.Fragment>
+            <Tooltip tooltipText="DARK SHADE">
+              <div className="colourSetToneWrapper" onClick={() => onToggleColourTone(colourSetId, "dark")}>
+                <div
+                  className="colourSetBox"
+                  style={{
+                    background: this.cssRGB(colourSet.tonesRGB.dark),
+                    cursor: "pointer",
+                  }}
+                />
+                {!disabledTones[colourSetId].has("dark") && <div className="selectionLine" />}
+              </div>
+            </Tooltip>
+            <Tooltip tooltipText="NORMAL SHADE">
+              <div className="colourSetToneWrapper" onClick={() => onToggleColourTone(colourSetId, "normal")}>
+                <div
+                  className="colourSetBox"
+                  style={{
+                    background: this.cssRGB(colourSet.tonesRGB.normal),
+                    cursor: "pointer",
+                  }}
+                />
+                {!disabledTones[colourSetId].has("normal") && <div className="selectionLine" />}
+              </div>
+            </Tooltip>
+            <Tooltip tooltipText="BRIGHT SHADE">
+              <div className="colourSetToneWrapper" onClick={() => onToggleColourTone(colourSetId, "light")}>
+                <div
+                  className="colourSetBox"
+                  style={{
+                    background: this.cssRGB(colourSet.tonesRGB.light),
+                    cursor: "pointer",
+                  }}
+                />
+                {!disabledTones[colourSetId].has("light") && <div className="selectionLine" />}
+              </div>
+            </Tooltip>
+          </React.Fragment>
+        );
+      default:
+        return "";
+    }
+  };
+
   render() {
     const {
       coloursJSON,
       getLocaleString,
       onChangeColourSetBlock,
+      onToggleColourTone,
       optionValue_version,
       selectedBlocks,
+      disabledTones,
       presets,
       selectedPresetName,
       canDeletePreset,
       onPresetChange,
       onDeletePreset,
       onSavePreset,
-      onSharePreset,
+      onExportPreset,
+      onImportPreset,
       onGetPDNPaletteClicked,
+      onGenerateColorScheme,
       handleAddCustomBlock,
       handleDeleteCustomBlock,
     } = this.props;
@@ -110,14 +172,24 @@ class BlockSelection extends Component {
         <button type="button" onClick={onSavePreset}>
           {getLocaleString("BLOCK-SELECTION/PRESETS/SAVE")}
         </button>
-        <Tooltip tooltipText={getLocaleString("BLOCK-SELECTION/PRESETS/SHARE-TT")}>
-          <button type="button" onClick={onSharePreset}>
-            {getLocaleString("BLOCK-SELECTION/PRESETS/SHARE")}
+        <Tooltip tooltipText={getLocaleString("BLOCK-SELECTION/PRESETS/EXPORT-TT")}>
+          <button type="button" onClick={onExportPreset}>
+            {getLocaleString("BLOCK-SELECTION/PRESETS/EXPORT")}
+          </button>
+        </Tooltip>
+        <Tooltip tooltipText={getLocaleString("BLOCK-SELECTION/PRESETS/IMPORT-TT")}>
+          <button type="button" onClick={onImportPreset}>
+            {getLocaleString("BLOCK-SELECTION/PRESETS/IMPORT")}
           </button>
         </Tooltip>
         <Tooltip tooltipText={getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD-TT")}>
           <button type="button" onClick={onGetPDNPaletteClicked}>
             {getLocaleString("BLOCK-SELECTION/PRESETS/DOWNLOAD")}
+          </button>
+        </Tooltip>
+        <Tooltip tooltipText={getLocaleString("BLOCK-SELECTION/PRESETS/COLOR-SCHEME-TT")}>
+          <button type="button" onClick={onGenerateColorScheme}>
+            {getLocaleString("BLOCK-SELECTION/PRESETS/COLOR-SCHEME")}
           </button>
         </Tooltip>
       </React.Fragment>
@@ -129,22 +201,22 @@ class BlockSelection extends Component {
           .map(([colourSetId, colourSet]) => (
             <div key={colourSetId} className="colourSet">
               {this.getColourSetBox(colourSet)}
+              {this.getColourSetTones(colourSetId, colourSet, disabledTones, onToggleColourTone)}
               <label>
                 <Tooltip tooltipText={getLocaleString("NONE")}>
-                  <BlockImage
-                    getLocaleString={getLocaleString}
-                    coloursJSON={coloursJSON}
-                    colourSetId={colourSetId}
-                    blockId={"-1"}
-                    onClick={() => onChangeColourSetBlock(colourSetId, "-1")}
-                    style={{
-                      cursor: "pointer",
-                      ...(selectedBlocks[colourSetId] === "-1" && {
-                        filter: "drop-shadow(0 0 4px #658968)",
-                        backgroundColor: "#658968",
-                      }),
-                    }}
-                  />
+                  <div className="blockWithIndicator">
+                    <BlockImage
+                      getLocaleString={getLocaleString}
+                      coloursJSON={coloursJSON}
+                      colourSetId={colourSetId}
+                      blockId={"-1"}
+                      onClick={() => onChangeColourSetBlock(colourSetId, "-1")}
+                      style={{
+                        cursor: "pointer",
+                      }}
+                    />
+                    {selectedBlocks[colourSetId] === "-1" && <div className="selectionLine" />}
+                  </div>
                 </Tooltip>
               </label>
               <div className={"colourSetBlocks"}>
@@ -176,26 +248,23 @@ class BlockSelection extends Component {
                               </Tooltip>
                             </div>
                           )}
-                        <BlockImage
-                          coloursJSON={coloursJSON}
-                          colourSetId={colourSetId}
-                          blockId={blockId}
-                          onClick={() => {
-                            onChangeColourSetBlock(colourSetId, blockId);
-                            if (block.presetIndex === "CUSTOM") {
-                              this.setState({ lastSelectedCustomBlock: { colourSetId, blockId } });
-                            }
-                          }}
-                          style={{
-                            cursor: "pointer",
-                            ...(selectedBlocks[colourSetId] === blockId && {
-                              filter: "drop-shadow(0 0 4px #658968)",
-                              ...(block.presetIndex !== "CUSTOM" && {
-                                backgroundColor: "#658968",
-                              }),
-                            }),
-                          }}
-                        />
+                        <div className="blockWithIndicator">
+                          <BlockImage
+                            coloursJSON={coloursJSON}
+                            colourSetId={colourSetId}
+                            blockId={blockId}
+                            onClick={() => {
+                              onChangeColourSetBlock(colourSetId, blockId);
+                              if (block.presetIndex === "CUSTOM") {
+                                this.setState({ lastSelectedCustomBlock: { colourSetId, blockId } });
+                              }
+                            }}
+                            style={{
+                              cursor: "pointer",
+                            }}
+                          />
+                          {selectedBlocks[colourSetId] === blockId && <div className="selectionLine" />}
+                        </div>
                       </Tooltip>
                     </label>
                   ))}

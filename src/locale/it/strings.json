@@ -10,8 +10,6 @@
     "FAQ": "FAQ",
     "PLEASE-READ-1": "Per favore controlla la  ",
     "PLEASE-READ-2": "  prima di contattarmi!",
-    "HAVE-YOU-READ": "Hai letto la FAQ?",
-    "HELP-IN-ENGLISH": "Nota: Il supporto verrà fornito solo in inlgese",
     "VIDEO-TUTORIAL": "Video tutorial"
   },
   "DESCRIPTION": {
@@ -20,17 +18,15 @@
     "3": "Ispirato dal ",
     "4": "generatore di mapart di Redstonehelper",
     "5": ", ha l'obbiettivo di implementare funzionalità molto richieste e di eliminare il bisogno di scaricare un programma",
-    "6": "Puoi contattarmi su Discord ",
-    "7": " oppure su Reddit ",
-    "8": ". Le richieste di funzionalità e le segnalazioni di bug possono essere inviate su ",
-    "9": null,
-    "10": null
+    "6": null,
+    "7": null
   },
   "BLOCK-SELECTION": {
     "TITLE": "Selezione di blocchi",
     "PRESETS": {
       "TITLE": "Preset",
       "DELETE": "Elimina",
+      "DELETE-CONFIRM": null,
       "DELETE-ERROR-DEFAULT": null,
       "SAVE": "Salva",
       "SAVE-PROMPT-ENTER-NAME": "Inserisci un nome per il tuo preset:",
@@ -48,7 +44,7 @@
       "EVERYTHING": "Tutto",
       "CARPETS": "Carpet",
       "GREYSCALE": null,
-      "DELETE-CONFIRM": null
+      "PISTON-CLEARABLE": null
     },
     "UNSUPPORTED-PAST": null,
     "ADD-CUSTOM": {
@@ -130,10 +126,19 @@
     },
     "BETTER-COLOUR": "Colori migliori",
     "BETTER-COLOUR-TT": "Garantisce una maggiore precisione del colore",
+    "E94": "E94",
+    "E94-TT": "Formula di differenza di colore migliorata con maggiore precisione percettiva",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS": "Euclideo ponderato (Luminosità)",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS-TT": "Distanza euclidea ponderata nello spazio YCbCr con enfasi sulla luminosità",
+    "CIE94": "CIE94",
+    "CIE94-TT": "Formula di differenza di colore CIE94 standard",
     "DITHERING": {
       "TITLE": "Dithering",
       "TITLE-TT": "Aggiunge pixel con colori apparentemente casuali per rendere l'illusione di una gamma di colori più ampia",
-      "NONE": "Nulla"
+      "NONE": "Nulla",
+      "PROPAGATION-RED": null,
+      "PROPAGATION-GREEN": null,
+      "PROPAGATION-BLUE": null
     },
     "PREPROCESSING": {
       "TITLE": null,
@@ -178,7 +183,8 @@
     "SHOW-PER-SPLIT": null,
     "SHOW-PER-SPLIT-TT": null,
     "REFRESH-MATERIALS": "AGGIORNA MATERIALI",
-    "REFRESH-MATERIALS-TT": "Aggiorna la lista di materiali"
+    "REFRESH-MATERIALS-TT": "Aggiorna la lista di materiali",
+    "COPY-CLIPBOARD": null
   },
   "VIEW-ONLINE": {
     "TITLE": null,
@@ -188,17 +194,7 @@
     "TO-EXIT": null,
     "SIZE": "Dimensione"
   },
-  "DONATE": {
-    "TITLE": "AIUTAMI A SALTARE LA CODA",
-    "TITLE-TT": "Vedi i sostenitori e dona"
-  },
   "LITEMATICA-WARNING": null,
   "EDGE-WARNING": "Nota: usare Microsoft Edge non è supportato.\\nPer favore usa Chrome (consigliato) o Firefox per MapartCraft",
-  "NONE": "Nulla",
-  "UNUSED": {
-    "SECOND": "secondo",
-    "SECONDS": "secondi",
-    "REMAINING": "rimanente/i",
-    "SETTINGS-3D-OPTIMIZED": "On (ottimizzato)"
-  }
+  "NONE": "Nulla"
 }

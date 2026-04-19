@@ -10,8 +10,6 @@
     "FAQ": "FAQ",
     "PLEASE-READ-1": "Please check the ",
     "PLEASE-READ-2": " before asking any questions anywhere!",
-    "HAVE-YOU-READ": "Have you read the FAQ?",
-    "HELP-IN-ENGLISH": "Note: Help will only be provided in English",
     "VIDEO-TUTORIAL": "Video tutorial"
   },
   "DESCRIPTION": {
@@ -20,11 +18,8 @@
     "3": "Inspired by ",
     "4": "Redstonehelper's map art program",
     "5": ", with the goal to add much-requested features and removing the need to download a program.",
-    "6": "Feel free to message me on Discord ",
-    "7": " or Reddit ",
-    "8": ". Feature requests and bug reports go on ",
-    "9": "Note: MapartCraft has been updated to a shiny new version. If anything is broken, you can still use the ",
-    "10": "classic version"
+    "6": "This is a fork of the original ",
+    "7": " by rebane2001. Feature requests and bug reports go on "
   },
   "BLOCK-SELECTION": {
     "TITLE": "Block selection",
@@ -35,12 +30,19 @@
       "DELETE-ERROR-DEFAULT": "This is a default preset and can't be edited/deleted.",
       "SAVE": "Save",
       "SAVE-PROMPT-ENTER-NAME": "Enter a name for your preset:",
-      "SHARE": "Share",
-      "SHARE-TT": "Shares the blocks you have currently selected as a link",
-      "SHARE-WARNING-NONE-SELECTED": "Select blocks before sharing them!",
-      "SHARE-LINK": "Copy this link to share your currently selected blocks",
+      "EXPORT": "Export",
+      "EXPORT-TT": "Export the currently selected block palette as a JavaScript file",
+      "EXPORT-WARNING-NONE-SELECTED": "Select blocks before exporting!",
+      "EXPORT-PROMPT-ENTER-NAME": "Enter palette name:",
+      "IMPORT": "Import",
+      "IMPORT-TT": "Import block palette from a JavaScript file",
+      "IMPORT-SUCCESS": "Block palette imported successfully!",
+      "IMPORT-SUCCESS-WITH-SAVE": "Block palette imported and saved as:",
+      "IMPORT-ERROR": "Error importing file. Please check the file format.",
       "DOWNLOAD": "Export palette",
-      "DOWNLOAD-TT": "Downloads color palette for use in Paint.NET",
+      "DOWNLOAD-TT": "Choose file format and download color palette for use in graphic editor.",
+      "COLOR-SCHEME": "Color Scheme",
+      "COLOR-SCHEME-TT": "Generate color scheme image with shades of selected blocks",
       "DOWNLOAD-WARNING-NONE-SELECTED": "Select blocks before downloading palette!",
       "DOWNLOAD-WARNING-MAX-COLOURS-1": "Warning, your palette has ",
       "DOWNLOAD-WARNING-MAX-COLOURS-2": " colors, while the maximum in Paint.NET is 96. Some colors will be unavailable in Paint.NET",
@@ -48,7 +50,8 @@
       "NONE": "None",
       "EVERYTHING": "Everything",
       "CARPETS": "Carpets",
-      "GREYSCALE": "Greyscale"
+      "GREYSCALE": "Greyscale",
+      "PISTON-CLEARABLE": "Piston clearable"
     },
     "UNSUPPORTED-PAST": "Unsupported past",
     "ADD-CUSTOM": {
@@ -83,6 +86,11 @@
     "VERSION": "Version",
     "VERSION-TT": "Select the version closest to what you're running",
     "MAP-SIZE": "Map size",
+    "MAP-SIZE-AUTO": "(automatic)",
+    "IMAGE2MAP": "image2map",
+    "IMAGE2MAP-TT": "Automatically set map counts from the image aspect ratio",
+    "AUTO-ZOOM": "Static preview",
+    "AUTO-ZOOM-TT": "Reduces preview size if mapart is too large and shifts page elements",
     "CROP": {
       "TITLE": "Crop",
       "TITLE-TT": "Crops your image instead of stretching it out",
@@ -119,8 +127,8 @@
       "SUPPORT-BLOCK-TO-ADD-TT": "Related to previous option"
     },
     "MAPDAT-SPECIFIC": {
-      "UNOBTAINABLE-COLOURS": "Unobtainiable colors",
-      "UNOBTAINABLE-COLOURS-TT": "Enables map.dat colors unobtainiable in schematics",
+      "UNOBTAINABLE-COLOURS": "Unobtainable colors",
+      "UNOBTAINABLE-COLOURS-TT": "Enables map.dat colors unobtainable in schematics",
       "TRANSPARENCY": "Transparency",
       "TRANSPARENCY-TT": "Enables transparency for map.dat",
       "TRANSPARENCY-TOLERANCE": "Tolerance",
@@ -130,10 +138,21 @@
     },
     "BETTER-COLOUR": "Better color",
     "BETTER-COLOUR-TT": "Gives you better color accuracy",
+    "WEIGHTED-EUCLIDEAN": "⭐ Weighted Euclidian",
+    "WEIGHTED-EUCLIDEAN-TT": "Euclidean distance in L*a*b* space with perceptual weights",
+    "E94": "⭐ E94",
+    "E94-TT": "Enhanced color difference formula with improved perceptual accuracy",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS": "⭐ Weighted Euclidian Brightness",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS-TT": "Weighted Euclidean distance in YCbCr space with emphasis on brightness",
+    "CIE94": "⭐ CIE94",
+    "CIE94-TT": "Standard CIE94 color difference formula",
     "DITHERING": {
       "TITLE": "Dithering",
       "TITLE-TT": "Adds seemingly random pixels for the illusion of more colors",
-      "NONE": "None"
+      "NONE": "None",
+      "PROPAGATION-RED": "Red propagation",
+      "PROPAGATION-GREEN": "Green propagation",
+      "PROPAGATION-BLUE": "Blue propagation"
     },
     "PREPROCESSING": {
       "TITLE": "Image preprocessing",
@@ -178,7 +197,8 @@
     "SHOW-PER-SPLIT": "Only show max mats per split",
     "SHOW-PER-SPLIT-TT": "For material reuse with locked maps",
     "REFRESH-MATERIALS": "REFRESH MATERIALS",
-    "REFRESH-MATERIALS-TT": "Refresh materials list"
+    "REFRESH-MATERIALS-TT": "Refresh materials list",
+    "COPY-CLIPBOARD": "Copy to clipboard"
   },
   "VIEW-ONLINE": {
     "TITLE": "VIEW ONLINE",
@@ -188,17 +208,7 @@
     "TO-EXIT": "To exit",
     "SIZE": "Size"
   },
-  "DONATE": {
-    "TITLE": "HELP ME SKIP THE QUEUE",
-    "TITLE-TT": "View supporters and donate"
-  },
   "LITEMATICA-WARNING": "Warning, Litematica does not support 1.15.2 very well; recommended action is to update to 1.16.5",
   "EDGE-WARNING": "Note: using Microsoft Edge is unsupported.\\nPlease use Chrome (preferred) or Firefox for MapartCraft",
-  "NONE": "None",
-  "UNUSED": {
-    "SECOND": "second",
-    "SECONDS": "seconds",
-    "REMAINING": "remaining",
-    "SETTINGS-3D-OPTIMIZED": "On (optimized)"
-  }
+  "NONE": "None"
 }

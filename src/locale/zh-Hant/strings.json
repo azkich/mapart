@@ -10,8 +10,6 @@
     "FAQ": "常見問題",
     "PLEASE-READ-1": "在詢問任何問題前，請先閱讀",
     "PLEASE-READ-2": "！",
-    "HAVE-YOU-READ": "您讀過常見問題了嗎?",
-    "HELP-IN-ENGLISH": "提醒：將以英文提供協助",
     "VIDEO-TUTORIAL": "影片教學"
   },
   "DESCRIPTION": {
@@ -20,17 +18,15 @@
     "3": "啟發自 ",
     "4": "Redstonehelper 製作的地圖畫產生器",
     "5": "，目標為新增其他功能，且不再需要下載程式。",
-    "6": "歡迎在 Discord ",
-    "7": " 或 Reddit 私訊我 ",
-    "8": "。如要回報 Bug 或是建議功能，請至 ",
-    "9": "提醒：MapartCraft 已更新到新版本。如果在使用上有任何問題，您仍可使用 ",
-    "10": "舊版"
+    "6": null,
+    "7": null
   },
   "BLOCK-SELECTION": {
     "TITLE": "選擇方塊",
     "PRESETS": {
       "TITLE": "調色盤",
       "DELETE": "刪除",
+      "DELETE-CONFIRM": null,
       "DELETE-ERROR-DEFAULT": "此為預設調色盤，故無法編輯或刪除",
       "SAVE": "儲存",
       "SAVE-PROMPT-ENTER-NAME": "請為您的調色盤取名字：",
@@ -48,7 +44,7 @@
       "EVERYTHING": "所有方塊",
       "CARPETS": "地毯",
       "GREYSCALE": "灰階",
-      "DELETE-CONFIRM": null
+      "PISTON-CLEARABLE": null
     },
     "UNSUPPORTED-PAST": "不支援的過往",
     "ADD-CUSTOM": {
@@ -130,10 +126,19 @@
     },
     "BETTER-COLOUR": "提高色準",
     "BETTER-COLOUR-TT": "提升色彩準確度",
+    "E94": "E94",
+    "E94-TT": "具有更高感知精度的改進色差公式",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS": "加權歐幾里得（亮度）",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS-TT": "在YCbCr空間中強調亮度的加權歐幾里得距離",
+    "CIE94": "CIE94",
+    "CIE94-TT": "標準CIE94色差公式",
     "DITHERING": {
       "TITLE": "抖動",
       "TITLE-TT": "添加看似隨機的像素，以產生更多顏色的錯覺",
-      "NONE": "無"
+      "NONE": "無",
+      "PROPAGATION-RED": null,
+      "PROPAGATION-GREEN": null,
+      "PROPAGATION-BLUE": null
     },
     "PREPROCESSING": {
       "TITLE": "預處理",
@@ -178,7 +183,8 @@
     "SHOW-PER-SPLIT": "只顯示每個分割區塊所需的最大材料",
     "SHOW-PER-SPLIT-TT": "用於鎖定地圖後材料重複使用",
     "REFRESH-MATERIALS": "重新載入材料",
-    "REFRESH-MATERIALS-TT": "重新載入材料列表"
+    "REFRESH-MATERIALS-TT": "重新載入材料列表",
+    "COPY-CLIPBOARD": null
   },
   "VIEW-ONLINE": {
     "TITLE": "線上檢視",
@@ -188,17 +194,7 @@
     "TO-EXIT": "以退出",
     "SIZE": "大小"
   },
-  "DONATE": {
-    "TITLE": "幫我跳過佇列",
-    "TITLE-TT": "查看贊助者並捐贈"
-  },
   "LITEMATICA-WARNING": "警告：Litematica 不完全支援 1.15.2；建議升級至 1.16.5",
   "EDGE-WARNING": "提醒：不支援 Microsoft Edge。\\n建議使用 Google Chrome 或是 Firefox.",
-  "NONE": "無",
-  "UNUSED": {
-    "SECOND": "秒",
-    "SECONDS": "秒",
-    "REMAINING": "剩餘",
-    "SETTINGS-3D-OPTIMIZED": "啟用 (最佳化)"
-  }
+  "NONE": "無"
 }

@@ -1,5 +1,22 @@
 :root {
+  /* Legacy colors */
   --rebaneGreen: #7BAE7F;
+  
+  /* New design system colors from index.html */
+  --bg-dark: #121212;
+  --bg-darker: #0a0a0a;
+  --beige-text: #F5F5DC;
+  --accent: #D4AF37;
+  --radius: 12px;
+  --transition: all 0.4s ease;
+  
+  /* Additional UI colors */
+  --border-color: rgba(212, 175, 55, 0.35);
+  --border-hover: rgba(212, 175, 55, 0.45);
+  --bg-section: rgba(212, 175, 55, 0.04);
+  --bg-button: rgba(212, 175, 55, 0.18);
+  --bg-button-hover: rgba(212, 175, 55, 0.28);
+  --shadow: rgba(0, 0, 0, 0.2);
 }
 
 @import url("https://fonts.googleapis.com/css?family=Open+Sans");
@@ -10,30 +27,121 @@
   src: url("./kenpixel_mini_square.woff") format("woff");
 }
 
-html {
-  background-color: #333;
+* {
+  box-sizing: border-box;
 }
 
-h1,
-h2 {
+html, body, #root {
+  background-color: var(--bg-dark) !important;
   margin: 0;
+  padding: 0;
+}
+
+h1, h2 {
+  margin: 0;
+  color: var(--beige-text);
 }
 
 body {
-  font-family: Lato, Open Sans, Arial;
-  color: #fff;
+  font-family: Lato, "Open Sans", Arial, sans-serif;
+  color: var(--beige-text);
   font-size: 16px;
-  margin: auto auto;
-  padding: 1em;
   line-height: 1.4;
-  text-align: justify;
+  text-align: initial;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 a,
 a:visited {
-  color: var(--rebaneGreen);
+  color: var(--accent);
+  text-decoration: none;
+  transition: var(--transition);
 }
 
+a:hover {
+  color: var(--beige-text);
+  text-decoration: underline;
+}
+
+/* Form elements styling matching index.html */
+select,
+textarea,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+button {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-color: var(--bg-dark) !important;
+  color: var(--beige-text) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius) !important;
+  padding: 0.55rem 0.8rem !important;
+  margin: 0.25rem !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: var(--transition) !important;
+  font-family: inherit;
+}
+
+/* Button specific styling */
+button {
+  background: var(--bg-button) !important;
+  border-color: var(--border-hover) !important;
+  color: var(--beige-text) !important;
+  cursor: pointer !important;
+  font-weight: 600;
+}
+
+button:hover {
+  background: var(--bg-button-hover) !important;
+  transform: translateY(-1px) !important;
+}
+
+button:active {
+  transform: translateY(0) !important;
+}
+
+button:disabled,
+button[disabled] {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(15%) !important;
+}
+
+/* Input and select focus states */
+select:focus,
+textarea:focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
+button:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15) !important;
+}
+
+select:hover,
+textarea:hover,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover {
+  background-color: rgba(212, 175, 55, 0.06) !important;
+  border-color: var(--border-hover) !important;
+}
+
+select option {
+  background: var(--bg-darker) !important;
+  color: var(--beige-text) !important;
+}
+
+/* Placeholder styling */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(245, 245, 220, 0.6) !important;
+}
+
+/* Radio buttons */
 [type="radio"] {
   position: absolute;
   opacity: 0;
@@ -41,15 +149,50 @@ a:visited {
   height: 0;
 }
 
+/* Table styling matching index.html */
 table {
-  border-collapse: collapse;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border-radius: var(--radius) !important;
+  overflow: hidden !important;
+  background: #201c14 !important;
+  border: 1px solid rgba(245, 245, 220, 0.08) !important;
+  width: 100%;
+  margin: 0.1em !important;
 }
 
-th:first-child {
-  /* For tables in map settings to align with other settings */
+tbody {
+  background: #201c14 !important;
+  color: var(--beige-text) !important;
+  border-radius: var(--radius) !important;
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(245, 245, 220, 0.06) !important;
+}
+
+/* Table cell styling to match table background */
+td, th {
+  background: #201c14 !important;
+  color: var(--beige-text) !important;
+  padding: 0.5rem !important;
+}
+
+thead tr th:first-child { 
+  border-top-left-radius: var(--radius) !important; 
   padding-left: 0;
 }
+thead tr th:last-child { 
+  border-top-right-radius: var(--radius) !important; 
+}
+tbody tr:last-child td:first-child { 
+  border-bottom-left-radius: var(--radius) !important; 
+}
+tbody tr:last-child td:last-child { 
+  border-bottom-right-radius: var(--radius) !important; 
+}
 
+/* Utility classes */
 .displayNone {
   display: none;
 }

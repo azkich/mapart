@@ -10,8 +10,6 @@
     "FAQ": "FAQ",
     "PLEASE-READ-1": "Merci de lire la ",
     "PLEASE-READ-2": " avant de poser toutes questions!",
-    "HAVE-YOU-READ": "Avez-vous lu la FAQ?",
-    "HELP-IN-ENGLISH": "Note: Toutes les questions et réponses seront et devront être en Anglais",
     "VIDEO-TUTORIAL": "Tutoriel vidéo"
   },
   "DESCRIPTION": {
@@ -20,17 +18,15 @@
     "3": "Inspiré par ",
     "4": "Redstonehelper's map art program",
     "5": ", avec l’objectif de rendre accessible une fonctionnalité très demandée sans avoir besoin de télécharger aucun programme.",
-    "6": "N'hésitez pas à me contacter sur Discord ",
-    "7": " ou Reddit ",
-    "8": ", Pour toute demande de fonctionnalité ou de bug, indiquez les sur ",
-    "9": "Note : MapartCraft a été mis à jour vers une version flambant neuve. Si vous préférez, vous pouvez toujours utiliser la ",
-    "10": "version classique"
+    "6": null,
+    "7": null
   },
   "BLOCK-SELECTION": {
     "TITLE": "Sélection des blocs",
     "PRESETS": {
       "TITLE": "Préconfiguration",
       "DELETE": "Supprimer",
+      "DELETE-CONFIRM": null,
       "DELETE-ERROR-DEFAULT": "Vous ne pouvez pas supprimer le réglage par defaut",
       "SAVE": "Sauvegarder",
       "SAVE-PROMPT-ENTER-NAME": "Entrer un nom pour votre préconfiguration:",
@@ -48,7 +44,7 @@
       "EVERYTHING": "Tout",
       "CARPETS": "Carpets",
       "GREYSCALE": "Nuance de gris",
-      "DELETE-CONFIRM": null
+      "PISTON-CLEARABLE": null
     },
     "UNSUPPORTED-PAST": "Non supporté",
     "ADD-CUSTOM": {
@@ -83,6 +79,8 @@
     "VERSION": "Version",
     "VERSION-TT": "Sélectionnez la version la plus proche de celle que vous utilisez",
     "MAP-SIZE": "Taille de la map",
+    "AUTO-ZOOM": "Aperçu statique",
+    "AUTO-ZOOM-TT": "Réduit la taille de l'aperçu si le mapart est trop grand et déplace les éléments de la page",
     "CROP": {
       "TITLE": "Recadrer",
       "TITLE-TT": "Recadre votre image au lieu de l'étirer",
@@ -130,10 +128,19 @@
     },
     "BETTER-COLOUR": "Meilleure couleur",
     "BETTER-COLOUR-TT": "Donne une meilleure précision des couleurs",
+    "E94": "E94",
+    "E94-TT": "Formule de différence de couleur améliorée avec une précision perceptuelle accrue",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS": "Euclidien pondéré (Luminosité)",
+    "WEIGHTED-EUCLIDEAN-BRIGHTNESS-TT": "Distance euclidienne pondérée dans l'espace YCbCr avec accent sur la luminosité",
+    "CIE94": "CIE94",
+    "CIE94-TT": "Formule de différence de couleur CIE94 standard",
     "DITHERING": {
       "TITLE": "Dithering",
       "TITLE-TT": "Ajoute des pixels aléatoires pour une illusion de couleurs",
-      "NONE": "Rien"
+      "NONE": "Rien",
+      "PROPAGATION-RED": null,
+      "PROPAGATION-GREEN": null,
+      "PROPAGATION-BLUE": null
     },
     "PREPROCESSING": {
       "TITLE": "Image en cours de traitement",
@@ -178,7 +185,8 @@
     "SHOW-PER-SPLIT": "Afficher le nombres max de matériaux par section",
     "SHOW-PER-SPLIT-TT": "Pour réutiliser les blocs une fois la carte verrouillée",
     "REFRESH-MATERIALS": "ACTUALISER LES MATÉRIAUX",
-    "REFRESH-MATERIALS-TT": "Actualiser la liste des matériaux"
+    "REFRESH-MATERIALS-TT": "Actualiser la liste des matériaux",
+    "COPY-CLIPBOARD": null
   },
   "VIEW-ONLINE": {
     "TITLE": "Voir en ligne",
@@ -188,17 +196,7 @@
     "TO-EXIT": "Quitter",
     "SIZE": "Taille"
   },
-  "DONATE": {
-    "TITLE": "DONS POUR LA PRIO Q",
-    "TITLE-TT": "Voir les donateurs et soutenir"
-  },
   "LITEMATICA-WARNING": "Attention, Litematica n'est pas optimisé pour la version 1.15.2; une mise à niveau vers la version 1.16.5 est recommandée",
   "EDGE-WARNING": "Note: Microsoft Edge n’est pas compatible.\\nMerci d’utiliser Chrome (de préférence) ou Firefox pour utiliser MapartCraft",
-  "NONE": "Aucun",
-  "UNUSED": {
-    "SECOND": "seconde",
-    "SECONDS": "secondes",
-    "REMAINING": "restante",
-    "SETTINGS-3D-OPTIMIZED": "On (optimisé)"
-  }
+  "NONE": "Aucun"
 }

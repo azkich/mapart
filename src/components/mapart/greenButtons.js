@@ -7,12 +7,13 @@ import Tooltip from "../tooltip";
 import MapModes from "./json/mapModes.json";
 import WhereSupportBlocksModes from "./json/whereSupportBlocksModes.json";
 
-import NBTWorker from "./workers/nbt.jsworker";
+import WorkerBuilder from './workers/worker-builder';
+import NBTWorker from "./workers/nbt";
 
 import "./greenButtons.css";
 
 class GreenButtons extends Component {
-  // For download buttons and donate link etc
+  // For download buttons etc
   state = {
     buttonWidth_viewOnline: 1,
     buttonWidth_NBT_Joined: 1,
@@ -21,7 +22,7 @@ class GreenButtons extends Component {
     mapPreviewWorker_onFinishCallback: null,
   };
 
-  nbtWorker = new Worker(NBTWorker);
+  nbtWorker = new WorkerBuilder(NBTWorker);
 
   resetButtonWidths() {
     this.setState({
@@ -63,7 +64,7 @@ class GreenButtons extends Component {
     let numberOfSplitsCalculated = 0;
     let zipFile = new JSZip();
     const t0 = performance.now();
-    this.nbtWorker = new Worker(NBTWorker);
+    this.nbtWorker = new WorkerBuilder(NBTWorker);
     this.nbtWorker.onmessage = (e) => {
       switch (e.data.head) {
         case "PROGRESS_REPORT_CREATE_NBT_JOINED_FOR_VIEW_ONLINE": {
@@ -80,13 +81,6 @@ class GreenButtons extends Component {
         }
         case "PROGRESS_REPORT_CREATE_MAPDAT_SPLIT": {
           this.setState({ buttonWidth_Mapdat_Split: (numberOfSplitsCalculated + e.data.body) / (optionValue_mapSize_x * optionValue_mapSize_y) });
-          break;
-        }
-        case "NBT_FOR_VIEW_ONLINE": {
-          const t1 = performance.now();
-          console.log(`Created NBT for 'view online' by ${(t1 - t0).toString()}ms`);
-          const { NBT_Array } = e.data.body;
-          onGetViewOnlineNBT(NBT_Array);
           break;
         }
         case "NBT_ARRAY": {
@@ -137,6 +131,13 @@ class GreenButtons extends Component {
               downloadBlobFile(content, `${uploadedImage_baseFilename}.zip`);
             });
           }
+          break;
+        }
+        case "NBT_FOR_VIEW_ONLINE": {
+          const t1 = performance.now();
+          console.log(`Created NBT for 'view online' by ${(t1 - t0).toString()}ms`);
+          const { NBT_Array } = e.data.body;
+          onGetViewOnlineNBT(NBT_Array);
           break;
         }
         default: {
@@ -201,6 +202,9 @@ class GreenButtons extends Component {
       optionValue_mapdatFilenameIdStart,
       optionValue_betterColour,
       optionValue_dithering,
+      optionValue_dithering_propagation_red,
+      optionValue_dithering_propagation_green,
+      optionValue_dithering_propagation_blue,
       optionValue_preprocessingEnabled,
       preProcessingValue_brightness,
       preProcessingValue_contrast,
@@ -228,6 +232,9 @@ class GreenButtons extends Component {
       prevProps.optionValue_mapdatFilenameIdStart !== optionValue_mapdatFilenameIdStart,
       prevProps.optionValue_betterColour !== optionValue_betterColour,
       prevProps.optionValue_dithering !== optionValue_dithering,
+      prevProps.optionValue_dithering_propagation_red !== optionValue_dithering_propagation_red,
+      prevProps.optionValue_dithering_propagation_green !== optionValue_dithering_propagation_green,
+      prevProps.optionValue_dithering_propagation_blue !== optionValue_dithering_propagation_blue,
       prevProps.optionValue_preprocessingEnabled !== optionValue_preprocessingEnabled,
       prevProps.preProcessingValue_brightness !== preProcessingValue_brightness,
       prevProps.preProcessingValue_contrast !== preProcessingValue_contrast,
@@ -264,7 +271,7 @@ class GreenButtons extends Component {
       buttons_mapModeConditional = (
         <React.Fragment>
           <Tooltip tooltipText={getLocaleString("VIEW-ONLINE/TITLE-TT")}>
-            <div className="greenButton" onClick={this.onViewOnlineClicked}>
+            <div className="greenButton" onClick={this.onViewOnlineClicked} style={{ display: "none" }}>
               <span className="greenButton_text_dummy">{getLocaleString("VIEW-ONLINE/TITLE")}</span>
               <span className="greenButton_text">{getLocaleString("VIEW-ONLINE/TITLE")}</span>
               <div
@@ -275,7 +282,7 @@ class GreenButtons extends Component {
               />
             </div>
           </Tooltip>
-          <br />
+          <div style={{ height: "0.1rem" }}></div>
           <Tooltip tooltipText={getLocaleString("DOWNLOAD/NBT-SPECIFIC/DOWNLOAD-TT")}>
             <div className="greenButton" onClick={this.onGetNBTClicked}>
               <span className="greenButton_large_text_dummy">{getLocaleString("DOWNLOAD/NBT-SPECIFIC/DOWNLOAD")}</span>
@@ -288,7 +295,7 @@ class GreenButtons extends Component {
               />
             </div>
           </Tooltip>
-          <br />
+          <div style={{ height: "0.1rem" }}></div>
           <Tooltip tooltipText={getLocaleString("DOWNLOAD/NBT-SPECIFIC/DOWNLOAD-SPLIT-TT")}>
             <div className="greenButton" onClick={this.onGetNBTSplitClicked}>
               <span className="greenButton_text_dummy">{`${getLocaleString("DOWNLOAD/NBT-SPECIFIC/DOWNLOAD-SPLIT")} .ZIP`}</span>
@@ -301,7 +308,7 @@ class GreenButtons extends Component {
               />
             </div>
           </Tooltip>
-          <br />
+          <div style={{ height: "0.1rem" }}></div>
         </React.Fragment>
       );
     } else {
@@ -319,7 +326,7 @@ class GreenButtons extends Component {
               />
             </div>
           </Tooltip>
-          <br />
+          <div style={{ height: "0.1rem" }}></div>
           <Tooltip tooltipText={getLocaleString("DOWNLOAD/MAPDAT-SPECIFIC/DOWNLOAD-TT")}>
             <div className="greenButton" onClick={this.onGetMapdatSplitZipClicked}>
               <span className="greenButton_large_text_dummy">{`${getLocaleString("DOWNLOAD/MAPDAT-SPECIFIC/DOWNLOAD")} .ZIP`}</span>
@@ -332,30 +339,13 @@ class GreenButtons extends Component {
               />
             </div>
           </Tooltip>
-          <br />
+          <div style={{ height: "0.1rem" }}></div>
         </React.Fragment>
       );
     }
-    const button_donate = (
-      <React.Fragment>
-        <Tooltip tooltipText={getLocaleString("DONATE/TITLE-TT")}>
-          <div className="greenButton">
-            <a style={{ textDecoration: "none" }} href="./supporters">
-              <span className="greenButton_text_dummy" style={{ backgroundColor: "#688e6b", color: "#333333" }}>
-                {getLocaleString("DONATE/TITLE")}
-              </span>
-              <span className="greenButton_text" style={{ backgroundColor: "#688e6b", color: "#333333" }}>
-                {getLocaleString("DONATE/TITLE")}
-              </span>
-            </a>
-          </div>
-        </Tooltip>
-      </React.Fragment>
-    );
     const buttonsDiv = (
       <div>
         {buttons_mapModeConditional}
-        {button_donate}
       </div>
     );
     return buttonsDiv;

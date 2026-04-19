@@ -7,13 +7,65 @@ import BlockImage from "./blockImage";
 import "./materials.css";
 
 class Materials extends Component {
-  state = { onlyMaxPerSplit: false };
+  state = { 
+    onlyMaxPerSplit: false,
+    isDragOver: false,
+    dragCounter: 0
+  };
 
   onOnlyMaxPerSplitChange = () => {
     this.setState((currentState) => ({
       // nb this method of passing currentState instead of using this.state... is prefered; TODO neaten up controller uses
       onlyMaxPerSplit: !currentState.onlyMaxPerSplit,
     }));
+  };
+
+  handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState(prevState => ({
+      dragCounter: prevState.dragCounter + 1,
+      isDragOver: true
+    }));
+  };
+
+  handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState(prevState => {
+      const newCounter = prevState.dragCounter - 1;
+      return {
+        dragCounter: newCounter,
+        isDragOver: newCounter === 0 ? false : prevState.isDragOver
+      };
+    });
+  };
+
+  handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    this.setState({
+      isDragOver: false,
+      dragCounter: 0
+    });
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+
+      if (file.type.startsWith('image/')) {
+        const event = { target: { files: [file] } };
+        if (this.props.onFileDialogEvent) {
+          this.props.onFileDialogEvent(event);
+        }
+      }
+    }
   };
 
   getMaterialsCount_nonZeroMaterialsItems() {
@@ -59,16 +111,19 @@ class Materials extends Component {
   }
 
   formatMaterialCount = (count) => {
-    const numberOfStacks = Math.floor(count / 64);
+    if (count < 64) return '' + count;
+
+    const numberOfShulkers = Math.floor(count / 1728);
+    const numberOfStacks = Math.floor((count % 1728) / 64);
     const remainder = count % 64;
-    const numberOfShulkers = count / 1728;
-    return `${count.toString()}${
-      numberOfStacks !== 0
-        ? ` (${numberOfStacks.toString()}x64${remainder !== 0 ? ` + ${remainder.toString()}` : ""}${
-            numberOfShulkers >= 1 ? `, ${numberOfShulkers.toFixed(2)} SB` : ""
-          })`
-        : ""
-    }`;
+
+    const sb = numberOfShulkers > 0 ? `${numberOfShulkers} B` : "";
+    const stacks = numberOfStacks > 0 ? `${numberOfStacks} S` : "";
+    const items = remainder > 0 ? `${remainder} I`: "";
+
+    const split = [sb, stacks, items].filter(n => n).join(' + ');
+
+    return `${count.toString()} (${split})`;
   };
 
   colourSetIdAndBlockIdFromNBTName(blockName) {
@@ -94,14 +149,80 @@ class Materials extends Component {
     return null; // if block not found
   }
 
+  nbtNameToColourSetId(colourSetId) {
+    const { coloursJSON, optionValue_version, currentMaterialsData } = this.props;
+    const colourSet = coloursJSON[colourSetId];
+    const selection = currentMaterialsData.currentSelectedBlocks[colourSetId];
+
+    if (selection < 0) return null;
+
+    const block = colourSet.blocks[selection];
+    if (!(optionValue_version.MCVersion in block.validVersions)) {
+      return null;
+    }
+    let blockNBTData = block.validVersions[optionValue_version.MCVersion];
+
+    if (typeof blockNBTData === "string") {
+      // this is of the form eg "&1.12.2"
+      blockNBTData = block.validVersions[blockNBTData.slice(1)];
+    }
+
+    return blockNBTData.NBTName.toLowerCase();
+  }
+
+  copyToClipboard(nonZeroMaterialsItems, supportBlockCount) {
+    const { optionValue_supportBlock} = this.props;
+
+    const mergedList = new Array(nonZeroMaterialsItems.length);
+
+    for (const [colourSetId, val] of Object.values(nonZeroMaterialsItems)) {
+      const mcId = this.nbtNameToColourSetId(colourSetId);
+      mergedList[mcId] = val;
+    }
+
+    mergedList[optionValue_supportBlock] += supportBlockCount;
+
+    const counts = Object.fromEntries(
+      Object.entries(mergedList.sort((first, second) => second - first))
+      .map(([k, v]) => [k, this.formatMaterialCount(v)]));
+
+    const NBSP = String.fromCharCode(160); //non-breaking space
+    const CRLF = String.fromCharCode(13, 10); //new line
+
+    const results = ["```"];
+
+    //calculate paddings
+    let nameMaxLength = 0;
+
+    for (const key of Object.keys(counts)) {
+      if (nameMaxLength < key.length)
+        nameMaxLength = key.length;
+    }
+
+    //insert each entry
+    for (const [key, val] of Object.entries(counts)) {
+      results.push(key.padEnd(nameMaxLength, NBSP) + " = " + val);
+    }
+
+    results.push("```");
+
+    navigator.clipboard.writeText(results.join(CRLF));
+  }
+
   render() {
-    const { getLocaleString, coloursJSON, optionValue_supportBlock, currentMaterialsData } = this.props;
-    const { onlyMaxPerSplit } = this.state;
+    const { getLocaleString, coloursJSON, optionValue_supportBlock, currentMaterialsData, onChangeColourSetBlock } = this.props;
+    const { onlyMaxPerSplit, isDragOver } = this.state;
     const nonZeroMaterialsItems = this.getMaterialsCount_nonZeroMaterialsItems();
     const supportBlockCount = this.getMaterialsCount_supportBlock();
     const supportBlockIds = this.colourSetIdAndBlockIdFromNBTName(optionValue_supportBlock);
     return (
-      <div className="section materialsDiv">
+      <div 
+        className={`section materialsDiv dropZone ${isDragOver ? 'dragOver' : ''}`}
+        onDragEnter={this.handleDragEnter}
+        onDragLeave={this.handleDragLeave}
+        onDragOver={this.handleDragOver}
+        onDrop={this.handleDrop}
+      >
         <h2>{getLocaleString("MATERIALS/TITLE")}</h2>
         <Tooltip tooltipText={getLocaleString("MATERIALS/SHOW-PER-SPLIT-TT")}>
           <b>
@@ -111,6 +232,7 @@ class Materials extends Component {
         </Tooltip>{" "}
         <input type="checkbox" checked={onlyMaxPerSplit} onChange={this.onOnlyMaxPerSplitChange} />
         <br />
+        <button type="button" onClick={() => this.copyToClipboard(nonZeroMaterialsItems, supportBlockCount)}>{getLocaleString("MATERIALS/COPY-CLIPBOARD")}</button>
         <table id="materialtable">
           <tbody>
             <tr>
@@ -139,6 +261,18 @@ class Materials extends Component {
                   <th>
                     <Tooltip tooltipText={coloursJSON[colourSetId].blocks[blockId].displayName}>
                       <BlockImage coloursJSON={coloursJSON} colourSetId={colourSetId} blockId={blockId} />
+                    </Tooltip>
+                    <Tooltip tooltipText="Delete">
+                      <BlockImage
+                        getLocaleString={getLocaleString}
+                        coloursJSON={coloursJSON}
+                        colourSetId={colourSetId}
+                        blockId={"-1"}
+                        onClick={() => onChangeColourSetBlock(colourSetId, "-1")}
+                        style={{
+                          cursor: "pointer"
+                        }}
+                      />
                     </Tooltip>
                   </th>
                   <th>{this.formatMaterialCount(materialCount)}</th>

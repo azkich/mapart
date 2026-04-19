@@ -1,0 +1,25 @@
+/* Custom block buttons styling */
+.blockSelectionAddCustom button {
+  margin: 0.5rem 0 !important;
+  padding: 0.64rem 1.2rem !important;
+  background-color: var(--bg-button, #2a2a2a) !important;
+  border: 1px solid var(--border-color, rgba(212, 175, 55, 0.35)) !important;
+  border-radius: var(--radius, 12px) !important;
+  color: var(--beige-text, #F5F5DC) !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.blockSelectionAddCustom button:hover {
+  background-color: var(--bg-button-hover, #3a3a3a) !important;
+  border-color: var(--border-hover, rgba(212, 175, 55, 0.45)) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.blockSelectionAddCustom button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}

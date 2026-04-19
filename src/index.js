@@ -1,20 +1,21 @@
 import React from "react";
-import ReactDOM from "react-dom";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { createRoot } from "react-dom/client";
 
-import FAQ from "./components/faq";
+import { MapartProvider } from "./context/MapartContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Root from "./components/root";
 
 import "./index.css";
 
-ReactDOM.render(
+const container = document.getElementById("root");
+const root = createRoot(container);
+
+root.render(
   <React.StrictMode>
-    <Router basename="/mapartcraft">
-      <Switch>
-        <Route path="/:countryCode?/faq" component={FAQ} />
-        <Route path="/:countryCode?" component={Root} />
-      </Switch>
-    </Router>
-  </React.StrictMode>,
-  document.getElementById("root")
+    <ErrorBoundary>
+      <MapartProvider>
+        <Root />
+      </MapartProvider>
+    </ErrorBoundary>
+  </React.StrictMode>
 );

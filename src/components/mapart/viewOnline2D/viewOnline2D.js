@@ -79,7 +79,7 @@ class ViewOnline2D extends Component {
 
     const img_textures = new Image();
     img_textures.onload = () => {
-      const canvasRef_viewOnline_ctx = canvasRef_viewOnline.current.getContext("2d");
+      const canvasRef_viewOnline_ctx = canvasRef_viewOnline.current.getContext("2d", { willReadFrequently: true });
       canvasRef_viewOnline_ctx.textAlign = "right";
       canvasRef_viewOnline_ctx.textBaseline = "alphabetic";
       canvasRef_viewOnline_ctx.font = "16px kenpixel_mini_square";

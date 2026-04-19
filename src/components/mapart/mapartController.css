@@ -1,3 +1,4 @@
+/* Mapart Controller styling matching index.html */
 .mapartController,
 .sectionsPreviewSettingsMaterials {
   display: flex;
@@ -5,12 +6,187 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 1.2rem;
+  background: transparent !important;
 }
 
 .sectionsPreviewSettingsMaterials {
   flex: 1;
+  gap: 1.2rem !important;
 }
 
 .section {
-  padding: 0.3em;
+  border: 1px solid rgba(212, 175, 55, 0.25) !important;
+  border-radius: var(--radius) !important;
+  background: var(--bg-section) !important;
+  padding: 1.2rem !important;
+  margin: 0.8rem !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: var(--transition);
+}
+
+.section:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .mapartController,
+  .sectionsPreviewSettingsMaterials {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .section {
+    margin: 0.5rem !important;
+    padding: 1rem !important;
+  }
+}
+
+/* Palette Format Modal */
+.palette-format-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 10, 10, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.palette-format-modal {
+  background: linear-gradient(145deg, rgba(18, 18, 18, 0.98), rgba(10, 10, 10, 0.98));
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 20px;
+  width: min(500px, 90vw);
+  max-width: 500px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(212, 175, 55, 0.1);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+  margin: auto;
+  max-height: calc(100vh - 4rem);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.palette-format-modal-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(145deg, rgba(18, 18, 18, 0.98), rgba(10, 10, 10, 0.98));
+}
+
+.palette-format-modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--accent, #d4af37);
+  font-weight: 600;
+}
+
+.palette-format-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--beige-text, #f5deb3);
+  font-size: 2rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.palette-format-modal-close:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--accent, #d4af37);
+}
+
+.palette-format-modal-body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.palette-format-option {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+}
+
+.palette-format-option:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+.palette-format-icon {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.palette-format-info {
+  flex: 1;
+}
+
+.palette-format-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent, #d4af37);
+  margin-bottom: 0.25rem;
+}
+
+.palette-format-ext {
+  font-size: 0.9rem;
+  color: var(--beige-text, #f5deb3);
+  opacity: 0.8;
 }
